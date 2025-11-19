@@ -1,0 +1,38 @@
+# Example params class for Account model
+#
+# This file demonstrates how to define permitted attributes
+# for the Account model using declarative syntax.
+#
+# To use this example:
+# 1. Rename this file to account_params.rb
+# 2. Customize the allowed/denied attributes for your needs
+# 3. Use in your controller with: params.require(:account).transform_params()
+#
+# Advanced usage:
+# - Override params class: params.require(:account).transform_params(AdminAccountParams)
+# - Pass current_user (always allowed): params.require(:account).transform_params(current_user: current_user)
+# - Pass declared metadata: params.require(:account).transform_params(current_user: current_user, ip_address: request.ip)
+
+class AccountParams < ApplicationParams
+  # Allow these attributes for mass assignment
+  allow :first_name
+  allow :last_name
+  allow :email
+  allow :phone_number
+
+  # Explicitly deny sensitive attributes
+  deny :is_admin
+  deny :account_balance
+
+  # Action-specific permissions
+  # allow :published_at, only: [:create, :update]
+  # allow :view_count, except: :create
+
+  # Declare allowed metadata keys (current_user is always allowed)
+  # Any metadata passed to transform_params must be declared here
+  metadata :ip_address, :role
+
+  # Application-specific flags
+  flag :require_approval, true
+  flag :audit_changes, true
+end
