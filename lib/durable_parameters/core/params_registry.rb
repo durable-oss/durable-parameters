@@ -102,7 +102,7 @@ module StrongParameters
         #   normalize_key('BlogPost') # => :blog_post
         #   normalize_key(:user) # => :user
         def normalize_key(key)
-          key.to_s.gsub(/([A-Z])/) { "_#{$1.downcase}" }.gsub(/^_/, '').to_sym
+          key.to_s.gsub(/([A-Z])/) { "_#{$1.downcase}" }.gsub(/^_/, "").to_sym
         end
       end
     end

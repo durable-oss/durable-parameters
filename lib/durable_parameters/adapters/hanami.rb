@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'durable_parameters/core'
+require "durable_parameters/core"
 
 module StrongParameters
   module Adapters
@@ -49,6 +49,7 @@ module StrongParameters
       # Hanami-specific Parameters implementation
       class Parameters < StrongParameters::Core::Parameters
         # Hanami uses symbol keys by default
+
         private
 
         def normalize_key(key)
@@ -80,21 +81,21 @@ module StrongParameters
         end
 
         # Alias for strong_params
-        alias sp strong_params
+        alias_method :sp, :strong_params
 
         # Handle ParameterMissing errors (Hanami 2.x style)
         def handle_parameter_missing(exception)
-          halt 400, { error: "Required parameter missing: #{exception.param}" }.to_json
+          halt 400, {error: "Required parameter missing: #{exception.param}"}.to_json
         end
 
         # Handle ForbiddenAttributes errors (Hanami 2.x style)
         def handle_forbidden_attributes(exception)
-          halt 400, { error: "Forbidden attributes in mass assignment" }.to_json
+          halt 400, {error: "Forbidden attributes in mass assignment"}.to_json
         end
 
         # Handle UnpermittedParameters errors (Hanami 2.x style)
         def handle_unpermitted_parameters(exception)
-          halt 400, { error: "Unpermitted parameters: #{exception.params.join(', ')}" }.to_json
+          halt 400, {error: "Unpermitted parameters: #{exception.params.join(", ")}"}.to_json
         end
 
         # Set up error handling when this module is included
@@ -111,15 +112,15 @@ module StrongParameters
       # Setup Hanami integration
       def self.setup!(app = nil)
         # Configure logging for unpermitted parameters in development
-        env = if app && app.respond_to?(:config)
+        env = if app&.respond_to?(:config)
           app.config.env
         elsif defined?(::Hanami) && ::Hanami.respond_to?(:env)
           ::Hanami.env
         else
-          ENV['HANAMI_ENV'] || ENV['RACK_ENV'] || 'development'
+          ENV["HANAMI_ENV"] || ENV["RACK_ENV"] || "development"
         end
 
-        if env == 'development' || env == :development
+        if env == "development" || env == :development
           ::StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = :log
           ::StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = lambda do |keys|
             # Try to get logger from Hanami
@@ -129,7 +130,7 @@ module StrongParameters
               app.logger
             end
 
-            logger&.warn("Unpermitted parameters: #{keys.join(', ')}")
+            logger&.warn("Unpermitted parameters: #{keys.join(", ")}")
           end
         end
       end

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module StrongParameters
   module Core
     # Base class for declarative parameter permission definitions.
@@ -234,27 +232,27 @@ module StrongParameters
           # Remove denied attributes
           attrs.reject! { |attr| denied_attributes.include?(attr) }
 
-           # Filter by action-specific flags if provided
-           if action
-             action = action.to_sym
-           end
-            attrs.select! do |attr|
-              opts = attribute_options(attr)
-              if opts[:only]
-                action.nil? || Array(opts[:only]).include?(action)
-              elsif opts[:except]
-                action.nil? || !Array(opts[:except]).include?(action)
-              else
-                true
-              end
+          # Filter by action-specific flags if provided
+          if action
+            action = action.to_sym
+          end
+          attrs.select! do |attr|
+            opts = attribute_options(attr)
+            if opts[:only]
+              action.nil? || Array(opts[:only]).include?(action)
+            elsif opts[:except]
+              action.nil? || !Array(opts[:except]).include?(action)
+            else
+              true
             end
+          end
 
           # Convert to proper permit format
           # For array attributes, return {attr: []}, otherwise just the symbol
           result = attrs.map do |attr|
             opts = attribute_options(attr)
             if opts[:array]
-              { attr => [] }
+              {attr => []}
             else
               attr
             end
@@ -271,8 +269,8 @@ module StrongParameters
         def apply_transformations(params, metadata = {})
           return params if transformations.empty?
 
-           # Handle non-hash params
-           return params unless params.is_a?(Hash) || params.respond_to?(:to_unsafe_h) || params.respond_to?(:to_h)
+          # Handle non-hash params
+          return params unless params.is_a?(Hash) || params.respond_to?(:to_unsafe_h) || params.respond_to?(:to_h)
 
           # Convert to regular hash - handle both plain hashes and Parameters objects
           hash = if params.respond_to?(:to_unsafe_h)
@@ -288,21 +286,21 @@ module StrongParameters
           # Make a dup so we don't modify the original
           hash = hash.dup
 
-           # Apply each transformation
-           transformations.each do |attribute, transformer|
-             key_str = attribute.to_s
-             if hash.key?(key_str)
-               # Deep dup the value to prevent transformations from modifying the original
-               original_value = hash[key_str]
-               duped_value = begin
-                 Marshal.load(Marshal.dump(original_value))
-               rescue TypeError
-                 # If Marshal fails (e.g., due to procs or unserializable objects), shallow dup
-                 original_value.dup
-               end
-               hash[key_str] = transformer.call(duped_value, metadata)
-             end
-           end
+          # Apply each transformation
+          transformations.each do |attribute, transformer|
+            key_str = attribute.to_s
+            if hash.key?(key_str)
+              # Deep dup the value to prevent transformations from modifying the original
+              original_value = hash[key_str]
+              duped_value = begin
+                Marshal.load(Marshal.dump(original_value))
+              rescue TypeError
+                # If Marshal fails (e.g., due to procs or unserializable objects), shallow dup
+                original_value.dup
+              end
+              hash[key_str] = transformer.call(duped_value, metadata)
+            end
+          end
 
           hash
         end

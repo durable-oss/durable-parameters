@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class DurableParametersTest < Minitest::Test
   def test_top_level_aliases_are_defined
@@ -16,8 +16,6 @@ class DurableParametersTest < Minitest::Test
     assert_equal StrongParameters::Core::ParamsRegistry, StrongParameters::ParamsRegistry
     assert_equal StrongParameters::Core::ForbiddenAttributesProtection, StrongParameters::ForbiddenAttributesProtection
   end
-
-
 
   def test_module_has_version
     assert defined?(StrongParameters::VERSION)
@@ -45,17 +43,17 @@ class DurableParametersTest < Minitest::Test
     # Test that Sinatra adapter would be loaded if Sinatra was defined
     # Since Sinatra is not defined in this test suite, we can't test the require
     # But we can check that the adapter file exists
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'sinatra.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "sinatra.rb")
     assert File.exist?(adapter_path), "Sinatra adapter file should exist"
   end
 
   def test_adapter_loading_hanami
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'hanami.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "hanami.rb")
     assert File.exist?(adapter_path), "Hanami adapter file should exist"
   end
 
   def test_adapter_loading_rage
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'rage.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "rage.rb")
     assert File.exist?(adapter_path), "Rage adapter file should exist"
   end
 
@@ -78,26 +76,26 @@ class DurableParametersTest < Minitest::Test
   end
 
   def test_sinatra_adapter_file_exists_and_loadable
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'sinatra.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "sinatra.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require 'durable_parameters/adapters/sinatra'
+    assert require "durable_parameters/adapters/sinatra"
     assert defined?(StrongParameters::Adapters::Sinatra)
   end
 
   def test_hanami_adapter_file_exists_and_loadable
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'hanami.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "hanami.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require 'durable_parameters/adapters/hanami'
+    assert require "durable_parameters/adapters/hanami"
     assert defined?(StrongParameters::Adapters::Hanami)
   end
 
   def test_rage_adapter_file_exists_and_loadable
-    adapter_path = File.join(__dir__, '..', 'lib', 'durable_parameters', 'adapters', 'rage.rb')
+    adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "rage.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require 'durable_parameters/adapters/rage'
+    assert require "durable_parameters/adapters/rage"
     assert defined?(StrongParameters::Adapters::Rage)
   end
 

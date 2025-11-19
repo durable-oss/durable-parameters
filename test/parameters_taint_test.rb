@@ -1,15 +1,15 @@
-require 'test_helper'
+require "test_helper"
 
 class ParametersTaintTest < Minitest::Test
   def setup
     @params = ActionController::Parameters.new(
-      :person => {
-        :age => '32',
-        :name => {
-          :first => 'David',
-          :last => 'Heinemeier Hansson'
+      person: {
+        age: "32",
+        name: {
+          first: "David",
+          last: "Heinemeier Hansson"
         },
-        :addresses => [{:city => 'Chicago', :state => 'Illinois'}]
+        addresses: [{city: "Chicago", state: "Illinois"}]
       }
     )
   end
@@ -63,17 +63,17 @@ class ParametersTaintTest < Minitest::Test
   end
 
   def test_not_permitted_is_sticky_beyond_merges
-    assert !@params.merge(:a => "b").permitted?
+    assert !@params.merge(a: "b").permitted?
   end
 
   def test_permitted_is_sticky_beyond_merges
     @params.permit!
-    assert @params.merge(:a => "b").permitted?
+    assert @params.merge(a: "b").permitted?
   end
 
   def test_modifying_the_parameters
     @params[:person][:hometown] = "Chicago"
-    @params[:person][:family] = { :brother => "Jonas" }
+    @params[:person][:family] = {brother: "Jonas"}
 
     assert_equal "Chicago", @params[:person][:hometown]
     assert_equal "Jonas", @params[:person][:family][:brother]

@@ -10,24 +10,24 @@
 # @see StrongParameters::Core::ApplicationParams
 # @see StrongParameters::Core::ParamsRegistry
 
-require 'durable_parameters/version'
-require 'durable_parameters/core'
+require "durable_parameters/version"
+require "durable_parameters/core"
 
 # Auto-detect and load framework adapter
 if defined?(Rails)
   # Rails is loaded - use Rails adapter
-  require 'durable_parameters/railtie'
-  require 'durable_parameters/log_subscriber'
+  require "durable_parameters/railtie"
+  require "durable_parameters/log_subscriber"
 elsif defined?(Sinatra)
   # Sinatra is loaded - auto-setup Sinatra adapter
-  require 'durable_parameters/adapters/sinatra'
+  require "durable_parameters/adapters/sinatra"
 elsif defined?(Hanami)
   # Hanami is loaded - auto-setup Hanami adapter
-  require 'durable_parameters/adapters/hanami'
+  require "durable_parameters/adapters/hanami"
   StrongParameters::Adapters::Hanami.setup!
 elsif defined?(Rage) || defined?(RageController)
   # Rage is loaded - auto-setup Rage adapter
-  require 'durable_parameters/adapters/rage'
+  require "durable_parameters/adapters/rage"
   StrongParameters::Adapters::Rage.setup!
 end
 

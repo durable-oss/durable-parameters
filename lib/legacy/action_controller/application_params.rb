@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module ActionController
   # Base class for declarative parameter permission definitions.
   #
@@ -201,7 +199,7 @@ module ActionController
         result = attrs.map do |attr|
           opts = attribute_options(attr)
           if opts[:array]
-            { attr => [] }
+            {attr => []}
           else
             attr
           end

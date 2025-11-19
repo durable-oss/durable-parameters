@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class ApplicationParamsArrayTest < Minitest::Test
   def setup
@@ -17,7 +17,7 @@ class ApplicationParamsArrayTest < Minitest::Test
 
     attrs = test_class.permitted_attributes
     assert_equal 1, attrs.length
-    assert_equal({ tags: [] }, attrs.first)
+    assert_equal({tags: []}, attrs.first)
   end
 
   # Test scalar and array attributes together
@@ -33,8 +33,8 @@ class ApplicationParamsArrayTest < Minitest::Test
     assert_equal 4, attrs.length
     assert attrs.include?(:name)
     assert attrs.include?(:email)
-    assert attrs.include?({ tags: [] })
-    assert attrs.include?({ categories: [] })
+    assert attrs.include?({tags: []})
+    assert attrs.include?({categories: []})
   end
 
   # Test array with action filters
@@ -46,7 +46,7 @@ class ApplicationParamsArrayTest < Minitest::Test
     # With create action
     attrs = test_class.permitted_attributes(action: :create)
     assert_equal 1, attrs.length
-    assert_equal({ tags: [] }, attrs.first)
+    assert_equal({tags: []}, attrs.first)
 
     # With update action
     attrs = test_class.permitted_attributes(action: :update)
@@ -62,7 +62,7 @@ class ApplicationParamsArrayTest < Minitest::Test
     # With create action
     attrs = test_class.permitted_attributes(action: :create)
     assert_equal 1, attrs.length
-    assert_equal({ tags: [] }, attrs.first)
+    assert_equal({tags: []}, attrs.first)
 
     # With destroy action
     attrs = test_class.permitted_attributes(action: :destroy)
@@ -81,8 +81,8 @@ class ApplicationParamsArrayTest < Minitest::Test
 
     attrs = child_class.permitted_attributes
     assert_equal 2, attrs.length
-    assert attrs.include?({ tags: [] })
-    assert attrs.include?({ categories: [] })
+    assert attrs.include?({tags: []})
+    assert attrs.include?({categories: []})
   end
 
   # Test array can be denied in child class
@@ -101,34 +101,34 @@ class ApplicationParamsArrayTest < Minitest::Test
     assert_equal 2, attrs.length
     assert attrs.include?(:name)
     assert attrs.include?(:email)
-    assert !attrs.include?({ tags: [] })
+    assert !attrs.include?({tags: []})
   end
 
   # Test transform_params with array attributes
   def test_transform_params_with_array
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
       allow :title
       allow :tags, array: true
     end
 
-    ActionController::ParamsRegistry.register('Article', test_class)
+    ActionController::ParamsRegistry.register("Article", test_class)
 
     params = ActionController::Parameters.new(
       article: {
-        title: 'Test Article',
-        tags: ['ruby', 'rails', 'testing'],
-        body: 'Should be filtered out'
+        title: "Test Article",
+        tags: ["ruby", "rails", "testing"],
+        body: "Should be filtered out"
       }
     )
 
-    permitted = params.require(:article).transform_params()
+    permitted = params.require(:article).transform_params
 
     assert permitted.permitted?
-    assert_equal 'Test Article', permitted[:title]
-    assert_equal ['ruby', 'rails', 'testing'], permitted[:tags]
+    assert_equal "Test Article", permitted[:title]
+    assert_equal ["ruby", "rails", "testing"], permitted[:tags]
     assert_nil permitted[:body]
   end
 
@@ -136,25 +136,25 @@ class ApplicationParamsArrayTest < Minitest::Test
   def test_transform_params_with_empty_array
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
       allow :title
       allow :tags, array: true
     end
 
-    ActionController::ParamsRegistry.register('Article', test_class)
+    ActionController::ParamsRegistry.register("Article", test_class)
 
     params = ActionController::Parameters.new(
       article: {
-        title: 'Test Article',
+        title: "Test Article",
         tags: []
       }
     )
 
-    permitted = params.require(:article).transform_params()
+    permitted = params.require(:article).transform_params
 
     assert permitted.permitted?
-    assert_equal 'Test Article', permitted[:title]
+    assert_equal "Test Article", permitted[:title]
     assert_equal [], permitted[:tags]
   end
 
@@ -162,25 +162,25 @@ class ApplicationParamsArrayTest < Minitest::Test
   def test_transform_params_filters_non_scalar_array_elements
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
       allow :title
       allow :tags, array: true
     end
 
-    ActionController::ParamsRegistry.register('Article', test_class)
+    ActionController::ParamsRegistry.register("Article", test_class)
 
     params = ActionController::Parameters.new(
       article: {
-        title: 'Test Article',
-        tags: ['valid', { invalid: 'hash' }, 'also_valid', ['nested', 'array']]
+        title: "Test Article",
+        tags: ["valid", {invalid: "hash"}, "also_valid", ["nested", "array"]]
       }
     )
 
-    permitted = params.require(:article).transform_params()
+    permitted = params.require(:article).transform_params
 
     assert permitted.permitted?
-    assert_equal 'Test Article', permitted[:title]
+    assert_equal "Test Article", permitted[:title]
     # Strong parameters filters out entire array if it contains non-scalar elements
     assert_nil permitted[:tags]
   end
@@ -189,33 +189,33 @@ class ApplicationParamsArrayTest < Minitest::Test
   def test_array_with_additional_attrs
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
       allow :title
     end
 
-    ActionController::ParamsRegistry.register('Article', test_class)
+    ActionController::ParamsRegistry.register("Article", test_class)
 
     params = ActionController::Parameters.new(
       article: {
-        title: 'Test Article',
-        tags: ['ruby', 'rails']
+        title: "Test Article",
+        tags: ["ruby", "rails"]
       }
     )
 
     # Add tags as additional attribute with array syntax
-    permitted = params.require(:article).transform_params(additional_attrs: [{ tags: [] }])
+    permitted = params.require(:article).transform_params(additional_attrs: [{tags: []}])
 
     assert permitted.permitted?
-    assert_equal 'Test Article', permitted[:title]
-    assert_equal ['ruby', 'rails'], permitted[:tags]
+    assert_equal "Test Article", permitted[:title]
+    assert_equal ["ruby", "rails"], permitted[:tags]
   end
 
   # Test multiple array attributes
   def test_multiple_array_attributes
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
       allow :title
       allow :tags, array: true
@@ -223,23 +223,23 @@ class ApplicationParamsArrayTest < Minitest::Test
       allow :author_ids, array: true
     end
 
-    ActionController::ParamsRegistry.register('Article', test_class)
+    ActionController::ParamsRegistry.register("Article", test_class)
 
     params = ActionController::Parameters.new(
       article: {
-        title: 'Test Article',
-        tags: ['ruby', 'rails'],
-        categories: ['tech', 'programming'],
+        title: "Test Article",
+        tags: ["ruby", "rails"],
+        categories: ["tech", "programming"],
         author_ids: [1, 2, 3]
       }
     )
 
-    permitted = params.require(:article).transform_params()
+    permitted = params.require(:article).transform_params
 
     assert permitted.permitted?
-    assert_equal 'Test Article', permitted[:title]
-    assert_equal ['ruby', 'rails'], permitted[:tags]
-    assert_equal ['tech', 'programming'], permitted[:categories]
+    assert_equal "Test Article", permitted[:title]
+    assert_equal ["ruby", "rails"], permitted[:tags]
+    assert_equal ["tech", "programming"], permitted[:categories]
     assert_equal [1, 2, 3], permitted[:author_ids]
   end
 end

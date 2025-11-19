@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'durable_parameters/core'
+require "durable_parameters/core"
 
 module StrongParameters
   module Adapters
@@ -22,6 +22,7 @@ module StrongParameters
       # Rage-specific Parameters implementation
       class Parameters < StrongParameters::Core::Parameters
         # Rage uses string keys like Rails
+
         private
 
         def normalize_key(key)
@@ -60,17 +61,17 @@ module StrongParameters
 
         # Handle parameter missing errors
         def handle_parameter_missing(exception)
-          render json: { error: "Required parameter missing: #{exception.param}" }, status: 400
+          render json: {error: "Required parameter missing: #{exception.param}"}, status: 400
         end
 
         # Handle forbidden attributes errors
         def handle_forbidden_attributes(exception)
-          render json: { error: "Forbidden attributes in mass assignment" }, status: 400
+          render json: {error: "Forbidden attributes in mass assignment"}, status: 400
         end
 
         # Handle unpermitted parameters errors
         def handle_unpermitted_parameters(exception)
-          render json: { error: "Unpermitted parameters: #{exception.params.join(', ')}" }, status: 400
+          render json: {error: "Unpermitted parameters: #{exception.params.join(", ")}"}, status: 400
         end
 
         # Set up error handling when this module is included
@@ -88,9 +89,9 @@ module StrongParameters
       def self.setup!
         # Configure logging for unpermitted parameters
         # Rage uses RAGE_ENV environment variable
-        env = ENV['RAGE_ENV'] || ENV['RACK_ENV'] || 'development'
+        env = ENV["RAGE_ENV"] || ENV["RACK_ENV"] || "development"
 
-        if env == 'development' || env == 'test'
+        if env == "development" || env == "test"
           ::StrongParameters::Adapters::Rage::Parameters.action_on_unpermitted_parameters = :log
           ::StrongParameters::Adapters::Rage::Parameters.unpermitted_notification_handler = lambda do |keys|
             # Rage has a logger available
@@ -100,7 +101,7 @@ module StrongParameters
               ::Rage::Logger.logger
             end
 
-            logger&.warn("Unpermitted parameters: #{keys.join(', ')}")
+            logger&.warn("Unpermitted parameters: #{keys.join(", ")}")
           end
         end
 

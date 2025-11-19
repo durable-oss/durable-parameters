@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class LogOnUnpermittedParamsTest < Minitest::Test
   def setup
@@ -11,22 +11,22 @@ class LogOnUnpermittedParamsTest < Minitest::Test
 
   def test_logs_on_unexpected_params
     params = ActionController::Parameters.new({
-      :book => { :pages => 65 },
-      :fishing => "Turnips"
+      book: {pages: 65},
+      fishing: "Turnips"
     })
 
     assert_logged("Unpermitted parameters: fishing") do
-      params.permit(:book => [:pages])
+      params.permit(book: [:pages])
     end
   end
 
   def test_logs_on_unexpected_nested_params
     params = ActionController::Parameters.new({
-      :book => { :pages => 65, :title => "Green Cats and where to find then." }
+      book: {pages: 65, title: "Green Cats and where to find then."}
     })
 
     assert_logged("Unpermitted parameters: title") do
-      params.permit(:book => [:pages])
+      params.permit(book: [:pages])
     end
   end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'rails/railtie'
-require 'durable_parameters/adapters/rails'
+require "rails/railtie"
+require "durable_parameters/adapters/rails"
 
 module StrongParameters
   # Rails integration for Strong Parameters.
@@ -22,7 +22,7 @@ module StrongParameters
     end
 
     # Configure action on unpermitted parameters (log in dev/test, silent in production)
-    initializer 'strong_parameters.config', before: 'action_controller.set_configs' do |app|
+    initializer "strong_parameters.config", before: "action_controller.set_configs" do |app|
       StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
@@ -30,8 +30,8 @@ module StrongParameters
     end
 
     # Add app/params directory to autoload paths for params classes
-    initializer 'strong_parameters.autoload_params' do |app|
-      params_path = app.root.join('app', 'params')
+    initializer "strong_parameters.autoload_params" do |app|
+      params_path = app.root.join("app", "params")
 
       # Add to autoload paths if directory exists
       if params_path.directory?
@@ -41,12 +41,12 @@ module StrongParameters
 
     # Automatically load and register all params classes after Rails initialization
     config.after_initialize do |app|
-      params_path = app.root.join('app', 'params')
+      params_path = app.root.join("app", "params")
 
       next unless params_path.directory?
 
       # Load all params class files
-      Dir[params_path.join('**', '*_params.rb')].each do |file|
+      Dir[params_path.join("**", "*_params.rb")].each do |file|
         require_dependency file
       end
 

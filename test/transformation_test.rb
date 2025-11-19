@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class TransformationTest < Minitest::Test
   def setup
@@ -13,7 +13,7 @@ class TransformationTest < Minitest::Test
   def test_basic_transformation
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'UserParams'
+        "UserParams"
       end
 
       allow :email
@@ -28,22 +28,22 @@ class TransformationTest < Minitest::Test
 
     params = ActionController::Parameters.new(
       user: {
-        email: '  TEST@EXAMPLE.COM  ',
-        name: 'John Doe'
+        email: "  TEST@EXAMPLE.COM  ",
+        name: "John Doe"
       }
     )
 
     result = params.require(:user).transform_params
 
-    assert_equal 'test@example.com', result[:email]
-    assert_equal 'John Doe', result[:name]
+    assert_equal "test@example.com", result[:email]
+    assert_equal "John Doe", result[:name]
   end
 
   # Test transformation with metadata
   def test_transformation_with_metadata
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'PostParams'
+        "PostParams"
       end
 
       allow :title
@@ -60,10 +60,10 @@ class TransformationTest < Minitest::Test
     ActionController::ParamsRegistry.register(:post, params_class)
 
     # Test with admin user
-    admin_user = { admin: true }
+    admin_user = {admin: true}
     params1 = ActionController::Parameters.new(
       post: {
-        title: 'My Post',
+        title: "My Post",
         published: true
       }
     )
@@ -72,10 +72,10 @@ class TransformationTest < Minitest::Test
     assert_equal true, result1[:published]
 
     # Test with non-admin user
-    regular_user = { admin: false }
+    regular_user = {admin: false}
     params2 = ActionController::Parameters.new(
       post: {
-        title: 'My Post',
+        title: "My Post",
         published: true
       }
     )
@@ -88,7 +88,7 @@ class TransformationTest < Minitest::Test
   def test_multiple_transformations
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'AccountParams'
+        "AccountParams"
       end
 
       allow :email
@@ -100,7 +100,7 @@ class TransformationTest < Minitest::Test
       end
 
       transform :username do |value, metadata|
-        value&.strip&.gsub(/\s+/, '_')
+        value&.strip&.gsub(/\s+/, "_")
       end
 
       transform :bio do |value, metadata|
@@ -112,16 +112,16 @@ class TransformationTest < Minitest::Test
 
     params = ActionController::Parameters.new(
       account: {
-        email: '  Admin@Example.COM  ',
-        username: '  john   doe  ',
-        bio: 'A' * 300
+        email: "  Admin@Example.COM  ",
+        username: "  john   doe  ",
+        bio: "A" * 300
       }
     )
 
     result = params.require(:account).transform_params
 
-    assert_equal 'admin@example.com', result[:email]
-    assert_equal 'john_doe', result[:username]  # gsub(/\s+/, '_') replaces consecutive spaces with single underscore
+    assert_equal "admin@example.com", result[:email]
+    assert_equal "john_doe", result[:username]  # gsub(/\s+/, '_') replaces consecutive spaces with single underscore
     assert_equal 200, result[:bio].length
   end
 
@@ -129,7 +129,7 @@ class TransformationTest < Minitest::Test
   def test_transformation_with_nil_value
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'UserParams'
+        "UserParams"
       end
 
       allow :email
@@ -156,7 +156,7 @@ class TransformationTest < Minitest::Test
   def test_transformation_ignores_denied_attributes
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'UserParams'
+        "UserParams"
       end
 
       allow :email
@@ -167,7 +167,7 @@ class TransformationTest < Minitest::Test
       end
 
       transform :role do |value, metadata|
-        'admin'  # This should never be applied since role is denied
+        "admin"  # This should never be applied since role is denied
       end
     end
 
@@ -175,14 +175,14 @@ class TransformationTest < Minitest::Test
 
     params = ActionController::Parameters.new(
       user: {
-        email: 'TEST@EXAMPLE.COM',
-        role: 'user'
+        email: "TEST@EXAMPLE.COM",
+        role: "user"
       }
     )
 
     result = params.require(:user).transform_params
 
-    assert_equal 'test@example.com', result[:email]
+    assert_equal "test@example.com", result[:email]
     assert_nil result[:role]  # Denied attributes are filtered out
   end
 
@@ -190,7 +190,7 @@ class TransformationTest < Minitest::Test
   def test_transformation_with_action_metadata
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ArticleParams'
+        "ArticleParams"
       end
 
       allow :slug
@@ -209,21 +209,21 @@ class TransformationTest < Minitest::Test
     ActionController::ParamsRegistry.register(:article, params_class)
 
     # Create action with no slug
-    params1 = ActionController::Parameters.new(article: { slug: nil })
+    params1 = ActionController::Parameters.new(article: {slug: nil})
     result1 = params1.require(:article).transform_params(action: :create)
     assert_match(/^article-\d+$/, result1[:slug])
 
     # Update action with slug
-    params2 = ActionController::Parameters.new(article: { slug: 'my-slug' })
+    params2 = ActionController::Parameters.new(article: {slug: "my-slug"})
     result2 = params2.require(:article).transform_params(action: :update)
-    assert_equal 'my-slug', result2[:slug]
+    assert_equal "my-slug", result2[:slug]
   end
 
   # Test transformation inheritance
   def test_transformation_inheritance
     base_params = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'BaseParams'
+        "BaseParams"
       end
 
       allow :email
@@ -235,7 +235,7 @@ class TransformationTest < Minitest::Test
 
     child_params = Class.new(base_params) do
       def self.name
-        'ChildParams'
+        "ChildParams"
       end
 
       allow :name
@@ -249,22 +249,22 @@ class TransformationTest < Minitest::Test
 
     params = ActionController::Parameters.new(
       child: {
-        email: 'TEST@EXAMPLE.COM',
-        name: 'john doe'
+        email: "TEST@EXAMPLE.COM",
+        name: "john doe"
       }
     )
 
     result = params.require(:child).transform_params
 
-    assert_equal 'test@example.com', result[:email]  # From parent
-    assert_equal 'JOHN DOE', result[:name]  # From child
+    assert_equal "test@example.com", result[:email]  # From parent
+    assert_equal "JOHN DOE", result[:name]  # From child
   end
 
   # Test transformation without params class (should not raise)
   def test_transformation_without_params_class
     params = ActionController::Parameters.new(
       user: {
-        email: 'TEST@EXAMPLE.COM'
+        email: "TEST@EXAMPLE.COM"
       }
     )
 
@@ -279,7 +279,7 @@ class TransformationTest < Minitest::Test
   def test_transformation_with_complex_metadata
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'CommentParams'
+        "CommentParams"
       end
 
       allow :content
@@ -301,38 +301,38 @@ class TransformationTest < Minitest::Test
     # With current_user
     params1 = ActionController::Parameters.new(
       comment: {
-        content: 'Great post!',
-        author_name: 'ignored'
+        content: "Great post!",
+        author_name: "ignored"
       }
     )
 
     result1 = params1.require(:comment).transform_params(
-      current_user: { name: 'John Doe' },
-      ip_address: '192.168.1.1'
+      current_user: {name: "John Doe"},
+      ip_address: "192.168.1.1"
     )
 
-    assert_equal 'John Doe', result1[:author_name]
+    assert_equal "John Doe", result1[:author_name]
 
     # Without current_user
     params2 = ActionController::Parameters.new(
       comment: {
-        content: 'Great post!',
-        author_name: 'ignored'
+        content: "Great post!",
+        author_name: "ignored"
       }
     )
 
     result2 = params2.require(:comment).transform_params(
-      ip_address: '192.168.1.100'
+      ip_address: "192.168.1.100"
     )
 
-    assert_equal 'Anonymous (192.168.1.100)', result2[:author_name]
+    assert_equal "Anonymous (192.168.1.100)", result2[:author_name]
   end
 
   # Test that transformations are applied before filtering
   def test_transformations_applied_before_filtering
     params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ProductParams'
+        "ProductParams"
       end
 
       allow :price
@@ -348,7 +348,7 @@ class TransformationTest < Minitest::Test
     params = ActionController::Parameters.new(
       product: {
         price: 1999,  # 19.99 in cents
-        other: 'ignored'
+        other: "ignored"
       }
     )
 

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class EnhancedErrorMessagesTest < Minitest::Test
   def setup
     @params = StrongParameters::Core::Parameters.new(
-      usr: { name: 'John', email: 'john@example.com' },
-      account: { balance: 100 },
-      data: { value: 'test' }
+      usr: {name: "John", email: "john@example.com"},
+      account: {balance: 100},
+      data: {value: "test"}
     )
   end
 
@@ -62,7 +62,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
 
   def test_parameter_missing_with_nested_params
     params = StrongParameters::Core::Parameters.new(
-      user: { profile: { name: 'John' } }
+      user: {profile: {name: "John"}}
     )
 
     user_params = params.require(:user)
@@ -80,7 +80,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
       @params.require(:missing)
     end
 
-    assert_equal 'missing', error.param
+    assert_equal "missing", error.param
   end
 
   def test_parameter_missing_when_value_is_empty_hash
@@ -105,8 +105,8 @@ class EnhancedErrorMessagesTest < Minitest::Test
 
   def test_parameter_missing_suggestion_with_partial_match
     params = StrongParameters::Core::Parameters.new(
-      user_profile: { name: 'John' },
-      user_settings: { theme: 'dark' }
+      user_profile: {name: "John"},
+      user_settings: {theme: "dark"}
     )
 
     error = assert_raises(StrongParameters::Core::ParameterMissing) do

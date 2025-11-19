@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'date'
-require 'bigdecimal'
-require 'stringio'
+require "date"
+require "bigdecimal"
+require "stringio"
 
 module StrongParameters
   module Core
@@ -42,13 +42,13 @@ module StrongParameters
 
         if context[:available_keys]&.any?
           msg += "\n\n"
-          msg += "Available keys: #{context[:available_keys].join(', ')}"
+          msg += "Available keys: #{context[:available_keys].join(", ")}"
           msg += "\n"
 
           # Suggest similar keys if available
           similar = find_similar_keys(param.to_s, context[:available_keys])
           if similar.any?
-            msg += "\nDid you mean? #{similar.join(', ')}"
+            msg += "\nDid you mean? #{similar.join(", ")}"
           end
         end
 
@@ -82,7 +82,7 @@ module StrongParameters
       # @param params [Array<String>] the names of the unpermitted parameters
       def initialize(params)
         @params = params
-        super("found unpermitted parameters: #{params.join(', ')}")
+        super("found unpermitted parameters: #{params.join(", ")}")
       end
     end
 
@@ -98,7 +98,7 @@ module StrongParameters
     class Parameters < Hash
       # @return [Boolean] whether this Parameters object is permitted
       attr_accessor :permitted
-      alias permitted? permitted
+      alias_method :permitted?, :permitted
 
       # @return [Symbol, String, nil] the key used in the last require() call
       attr_accessor :required_key
@@ -177,18 +177,18 @@ module StrongParameters
 
         if value.nil?
           # Provide helpful context in error message
-          context = { available_keys: keys }
+          context = {available_keys: keys}
           raise ParameterMissing.new(key, context)
         end
 
-         # Track the required key so transform_params can infer the params class
-         if value.is_a?(Parameters) && value.required_key.nil?
-           value.required_key = @required_key || key.to_sym
-         end
+        # Track the required key so transform_params can infer the params class
+        if value.is_a?(Parameters) && value.required_key.nil?
+          value.required_key = @required_key || key.to_sym
+        end
         value
       end
 
-      alias required require
+      alias_method :required, :require
 
       # Create a new Parameters object with only the specified keys permitted.
       #
@@ -329,8 +329,10 @@ module StrongParameters
       # @raise [ParameterMissing] if the key is not found
       def fetch(key, *args)
         key = normalize_key(key)
-        convert_hashes_to_parameters(key, super(key, *args), false)
-      rescue KeyError, IndexError
+        convert_hashes_to_parameters(key, super, false)
+      rescue KeyError
+        raise ParameterMissing.new(key)
+      rescue IndexError
         raise ParameterMissing.new(key)
       end
 
@@ -342,8 +344,8 @@ module StrongParameters
         super(normalize_key(key))
       end
 
-      alias key? has_key?
-      alias include? has_key?
+      alias_method :key?, :has_key?
+      alias_method :include?, :has_key?
 
       # Delete a key from the parameters.
       #
@@ -361,7 +363,7 @@ module StrongParameters
       #   params.slice(:name, :email)
       def slice(*keys)
         normalized_keys = keys.map { |k| normalize_key(k) }
-        sliced = select { |k, v| normalized_keys.include?(k) }
+        sliced = slice(*normalized_keys)
 
         self.class.new(sliced).tap do |new_instance|
           new_instance.instance_variable_set(:@permitted, @permitted)
@@ -408,7 +410,7 @@ module StrongParameters
         to_h
       end
 
-      alias to_hash to_h
+      alias_method :to_hash, :to_h
 
       protected
 
@@ -575,9 +577,9 @@ module StrongParameters
         end
       end
 
-       def fields_for_style?(object)
-         object.is_a?(Hash) && !object.empty? && object.all? { |k, v| k =~ /\A-?\d+\z/ && v.is_a?(Hash) }
-       end
+      def fields_for_style?(object)
+        object.is_a?(Hash) && !object.empty? && object.all? { |k, v| k =~ /\A-?\d+\z/ && v.is_a?(Hash) }
+      end
 
       def unpermitted_parameters!(params)
         return unless self.class.action_on_unpermitted_parameters
@@ -598,16 +600,16 @@ module StrongParameters
         keys - params.keys - NEVER_UNPERMITTED_PARAMS
       end
 
-       def notify_unpermitted(keys)
-         if self.class.unpermitted_notification_handler
-           begin
-             self.class.unpermitted_notification_handler.call(keys)
-           rescue => e
-             # Log the error but don't prevent parameter processing
-             # In a real application, you might want to log this
-           end
-         end
-       end
+      def notify_unpermitted(keys)
+        if self.class.unpermitted_notification_handler
+          begin
+            self.class.unpermitted_notification_handler.call(keys)
+          rescue
+            # Log the error but don't prevent parameter processing
+            # In a real application, you might want to log this
+          end
+        end
+      end
 
       # Validate that all provided metadata keys are allowed by the params class.
       #
@@ -615,29 +617,29 @@ module StrongParameters
       # @param metadata_keys [Array<Symbol>] the metadata keys to validate
       # @raise [ArgumentError] if any metadata keys are not declared
       # @return [void]
-        def validate_metadata_keys!(params_class, metadata_keys)
-          return if metadata_keys.empty?
+      def validate_metadata_keys!(params_class, metadata_keys)
+        return if metadata_keys.empty?
 
-          disallowed_keys = metadata_keys.reject { |key| key == :current_user || params_class.metadata_allowed?(key) }
+        disallowed_keys = metadata_keys.reject { |key| key == :current_user || params_class.metadata_allowed?(key) }
 
-          return unless disallowed_keys.any?
+        return unless disallowed_keys.any?
 
-          # Build a helpful error message
-          keys_list = disallowed_keys.map(&:inspect).join(', ')
-          class_name = params_class.name
+        # Build a helpful error message
+        keys_list = disallowed_keys.map(&:inspect).join(", ")
+        class_name = params_class.name
 
-          raise ArgumentError, <<~ERROR.strip
-            Metadata key(s) #{keys_list} not allowed for #{class_name}.
+        raise ArgumentError, <<~ERROR.strip
+          Metadata key(s) #{keys_list} not allowed for #{class_name}.
 
-            To fix this, declare them in your params class:
+          To fix this, declare them in your params class:
 
-              class #{class_name} < ApplicationParams
-                metadata #{disallowed_keys.map(&:inspect).join(', ')}
-              end
+            class #{class_name} < ApplicationParams
+              metadata #{disallowed_keys.map(&:inspect).join(", ")}
+            end
 
-            Note: :current_user is always implicitly allowed and doesn't need to be declared.
-          ERROR
-        end
+          Note: :current_user is always implicitly allowed and doesn't need to be declared.
+        ERROR
+      end
     end
   end
 end

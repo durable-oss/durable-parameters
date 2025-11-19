@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'sinatra/base'
-require 'durable_parameters/core'
+require "sinatra/base"
+require "durable_parameters/core"
 
 module StrongParameters
   module Adapters
@@ -26,6 +26,7 @@ module StrongParameters
       # Sinatra-specific Parameters implementation
       class Parameters < StrongParameters::Core::Parameters
         # Sinatra typically uses string keys, so we normalize to strings
+
         private
 
         def normalize_key(key)
@@ -43,22 +44,22 @@ module StrongParameters
         end
 
         # Alias for strong_params for Rails compatibility
-        alias sp strong_params
+        alias_method :sp, :strong_params
       end
 
       # Error handler for ParameterMissing
       module ErrorHandlers
         def self.registered(app)
           app.error StrongParameters::Core::ParameterMissing do
-            halt 400, { error: "Required parameter missing: #{env['sinatra.error'].param}" }.to_json
+            halt 400, {error: "Required parameter missing: #{env["sinatra.error"].param}"}.to_json
           end
 
           app.error StrongParameters::Core::ForbiddenAttributes do
-            halt 400, { error: "Forbidden attributes in mass assignment" }.to_json
+            halt 400, {error: "Forbidden attributes in mass assignment"}.to_json
           end
 
           app.error StrongParameters::Core::UnpermittedParameters do
-            halt 400, { error: "Unpermitted parameters: #{env['sinatra.error'].params.join(', ')}" }.to_json
+            halt 400, {error: "Unpermitted parameters: #{env["sinatra.error"].params.join(", ")}"}.to_json
           end
         end
       end
@@ -72,7 +73,7 @@ module StrongParameters
         if app.development?
           ::StrongParameters::Adapters::Sinatra::Parameters.action_on_unpermitted_parameters = :log
           ::StrongParameters::Adapters::Sinatra::Parameters.unpermitted_notification_handler = lambda do |keys|
-            app.logger.warn "Unpermitted parameters: #{keys.join(', ')}" if app.respond_to?(:logger)
+            app.logger.warn "Unpermitted parameters: #{keys.join(", ")}" if app.respond_to?(:logger)
           end
         end
       end

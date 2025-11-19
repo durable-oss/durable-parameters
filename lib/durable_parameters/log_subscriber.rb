@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'active_support/log_subscriber'
-require 'active_support/notifications'
+require "active_support/log_subscriber"
+require "active_support/notifications"
 
 module StrongParameters
   # Log subscriber for unpermitted parameters notifications.
@@ -16,7 +16,7 @@ module StrongParameters
     # @return [void]
     def unpermitted_parameters(event)
       unpermitted_keys = event.payload[:keys]
-      debug("Unpermitted parameters: #{unpermitted_keys.join(', ')}")
+      debug("Unpermitted parameters: #{unpermitted_keys.join(", ")}")
     end
 
     # Returns the logger for this subscriber.

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'date'
-require 'bigdecimal'
-require 'stringio'
+require "date"
+require "bigdecimal"
+require "stringio"
 
-require 'active_support/concern'
-require 'active_support/core_ext/hash/indifferent_access'
-require 'active_support/core_ext/array/wrap'
-require 'action_controller'
-require 'action_dispatch/http/upload'
+require "active_support/concern"
+require "active_support/core_ext/hash/indifferent_access"
+require "active_support/core_ext/array/wrap"
+require "action_controller"
+require "action_dispatch/http/upload"
 
 module ActionController
   # Exception raised when a required parameter is missing or empty.
@@ -16,18 +16,20 @@ module ActionController
   # @example
   #   params.require(:user)
   #   # => ActionController::ParameterMissing: param is missing or the value is empty: user
-  class ParameterMissing < IndexError
-    # @return [Symbol, String] the name of the missing parameter
-    attr_reader :param
+  unless defined?(ParameterMissing)
+    class ParameterMissing < IndexError
+      # @return [Symbol, String] the name of the missing parameter
+      attr_reader :param
 
-    # Initialize a new ParameterMissing exception
-    #
-    # @param param [Symbol, String] the name of the missing parameter
-    def initialize(param)
-      @param = param
-      super("param is missing or the value is empty: #{param}")
+      # Initialize a new ParameterMissing exception
+      #
+      # @param param [Symbol, String] the name of the missing parameter
+      def initialize(param)
+        @param = param
+        super("param is missing or the value is empty: #{param}")
+      end
     end
-  end unless defined?(ParameterMissing)
+  end
 
   # Exception raised when unpermitted parameters are detected and configured to raise.
   #
@@ -35,18 +37,20 @@ module ActionController
   #   params.permit(:name)
   #   # With params containing :admin => true
   #   # => ActionController::UnpermittedParameters: found unpermitted parameters: admin
-  class UnpermittedParameters < IndexError
-    # @return [Array<String>] the names of the unpermitted parameters
-    attr_reader :params
+  unless defined?(UnpermittedParameters)
+    class UnpermittedParameters < IndexError
+      # @return [Array<String>] the names of the unpermitted parameters
+      attr_reader :params
 
-    # Initialize a new UnpermittedParameters exception
-    #
-    # @param params [Array<String>] the names of the unpermitted parameters
-    def initialize(params)
-      @params = params
-      super("found unpermitted parameters: #{params.join(', ')}")
+      # Initialize a new UnpermittedParameters exception
+      #
+      # @param params [Array<String>] the names of the unpermitted parameters
+      def initialize(params)
+        @params = params
+        super("found unpermitted parameters: #{params.join(", ")}")
+      end
     end
-  end unless defined?(UnpermittedParameters)
+  end
 
   # Strong Parameters implementation for Action Controller.
   #
@@ -61,7 +65,7 @@ module ActionController
   class Parameters < ActiveSupport::HashWithIndifferentAccess
     # @return [Boolean] whether this Parameters object is permitted
     attr_accessor :permitted
-    alias permitted? permitted
+    alias_method :permitted?, :permitted
 
     # @return [Symbol, String, nil] the key used in the last require() call
     attr_accessor :required_key
@@ -76,7 +80,7 @@ module ActionController
     #
     # @param attributes [Hash, nil] the initial attributes
     def initialize(attributes = nil)
-      super(attributes)
+      super
       @permitted = false
       @required_key = nil
     end
@@ -93,8 +97,8 @@ module ActionController
     def permit!
       each_pair do |key, value|
         value = convert_hashes_to_parameters(key, value)
-        Array.wrap(value).each do |_|
-          _.permit! if _.respond_to?(:permit!)
+        Array.wrap(value).each do |v|
+          v.permit! if v.respond_to?(:permit!)
         end
       end
 
@@ -123,7 +127,7 @@ module ActionController
       value
     end
 
-    alias required require
+    alias_method :required, :require
 
     # Create a new Parameters object with only the specified keys permitted.
     #
@@ -252,7 +256,9 @@ module ActionController
     # @raise [ParameterMissing] if the key is not found
     def fetch(key, *args)
       convert_hashes_to_parameters(key, super, false)
-    rescue KeyError, IndexError
+    rescue KeyError
+      raise ActionController::ParameterMissing.new(key)
+    rescue IndexError
       raise ActionController::ParameterMissing.new(key)
     end
 
@@ -300,189 +306,190 @@ module ActionController
     end
 
     protected
-      def convert_value(value)
-        if value.class == Hash
-          self.class.new_from_hash_copying_default(value)
-        elsif value.is_a?(Array)
-          value.dup.replace(value.map { |e| convert_value(e) })
-        else
-          value
-        end
+
+    def convert_value(value)
+      if value.instance_of?(Hash)
+        self.class.new_from_hash_copying_default(value)
+      elsif value.is_a?(Array)
+        value.dup.replace(value.map { |e| convert_value(e) })
+      else
+        value
       end
+    end
 
     private
 
-      def convert_hashes_to_parameters(key, value, assign_if_converted=true)
-        converted = convert_value_to_parameters(value)
-        self[key] = converted if assign_if_converted && !converted.equal?(value)
-        converted
+    def convert_hashes_to_parameters(key, value, assign_if_converted = true)
+      converted = convert_value_to_parameters(value)
+      self[key] = converted if assign_if_converted && !converted.equal?(value)
+      converted
+    end
+
+    def convert_value_to_parameters(value)
+      if value.is_a?(Array)
+        value.map { |v| convert_value_to_parameters(v) }
+      elsif value.is_a?(Parameters) || !value.is_a?(Hash)
+        value
+      else
+        self.class.new(value)
+      end
+    end
+
+    #
+    # --- Filtering ----------------------------------------------------------
+    #
+
+    # Whitelist of permitted scalar types for parameter filtering.
+    #
+    # These types are considered safe for mass assignment and include types
+    # commonly used in XML and JSON requests. String is first to optimize
+    # the common case through short-circuit evaluation.
+    #
+    # Note: DateTime inherits from Date, so it's implicitly included via Date.
+    #
+    # @note If you modify this list, please update the README documentation.
+    PERMITTED_SCALAR_TYPES = [
+      String,
+      Symbol,
+      NilClass,
+      Numeric,
+      TrueClass,
+      FalseClass,
+      Date,
+      Time,
+      # DateTimes are Dates, we document the type but avoid the redundant check.
+      StringIO,
+      IO,
+      ActionDispatch::Http::UploadedFile,
+      Rack::Test::UploadedFile
+    ].freeze
+
+    # Check if a value is a permitted scalar type.
+    #
+    # @param value [Object] the value to check
+    # @return [Boolean] true if value is a permitted scalar type
+    def permitted_scalar?(value)
+      PERMITTED_SCALAR_TYPES.any? { |type| value.is_a?(type) }
+    end
+
+    # Check if a value is an array containing only permitted scalars.
+    #
+    # @param value [Object] the value to check
+    # @return [Boolean, nil] true if array of permitted scalars, nil otherwise
+    def array_of_permitted_scalars?(value)
+      return unless value.is_a?(Array)
+
+      value.all? { |element| permitted_scalar?(element) }
+    end
+
+    def permitted_scalar_filter(params, key)
+      if has_key?(key) && permitted_scalar?(self[key])
+        params[key] = self[key]
       end
 
-      def convert_value_to_parameters(value)
-        if value.is_a?(Array)
-          value.map { |_| convert_value_to_parameters(_) }
-        elsif value.is_a?(Parameters) || !value.is_a?(Hash)
-          value
-        else
-          self.class.new(value)
-        end
-      end
-
-      #
-      # --- Filtering ----------------------------------------------------------
-      #
-
-      # Whitelist of permitted scalar types for parameter filtering.
-      #
-      # These types are considered safe for mass assignment and include types
-      # commonly used in XML and JSON requests. String is first to optimize
-      # the common case through short-circuit evaluation.
-      #
-      # Note: DateTime inherits from Date, so it's implicitly included via Date.
-      #
-      # @note If you modify this list, please update the README documentation.
-      PERMITTED_SCALAR_TYPES = [
-        String,
-        Symbol,
-        NilClass,
-        Numeric,
-        TrueClass,
-        FalseClass,
-        Date,
-        Time,
-        # DateTimes are Dates, we document the type but avoid the redundant check.
-        StringIO,
-        IO,
-        ActionDispatch::Http::UploadedFile,
-        Rack::Test::UploadedFile
-      ].freeze
-
-      # Check if a value is a permitted scalar type.
-      #
-      # @param value [Object] the value to check
-      # @return [Boolean] true if value is a permitted scalar type
-      def permitted_scalar?(value)
-        PERMITTED_SCALAR_TYPES.any? { |type| value.is_a?(type) }
-      end
-
-      # Check if a value is an array containing only permitted scalars.
-      #
-      # @param value [Object] the value to check
-      # @return [Boolean, nil] true if array of permitted scalars, nil otherwise
-      def array_of_permitted_scalars?(value)
-        return unless value.is_a?(Array)
-
-        value.all? { |element| permitted_scalar?(element) }
-      end
-
-      def permitted_scalar_filter(params, key)
-        if has_key?(key) && permitted_scalar?(self[key])
+      keys.grep(/\A#{Regexp.escape(key.to_s)}\(\d+[if]?\)\z/).each do |key|
+        if permitted_scalar?(self[key])
           params[key] = self[key]
         end
-
-        keys.grep(/\A#{Regexp.escape(key.to_s)}\(\d+[if]?\)\z/).each do |key|
-          if permitted_scalar?(self[key])
-            params[key] = self[key]
-          end
-        end
       end
+    end
 
-      def array_of_permitted_scalars_filter(params, key, hash = self)
-        if hash.has_key?(key) && array_of_permitted_scalars?(hash[key])
-          params[key] = hash[key]
-        end
+    def array_of_permitted_scalars_filter(params, key, hash = self)
+      if hash.has_key?(key) && array_of_permitted_scalars?(hash[key])
+        params[key] = hash[key]
       end
+    end
 
-      def hash_filter(params, filter)
-        filter = filter.with_indifferent_access
+    def hash_filter(params, filter)
+      filter = filter.with_indifferent_access
 
-        # Slicing filters out non-declared keys.
-        slice(*filter.keys).each do |key, value|
-          next unless value
+      # Slicing filters out non-declared keys.
+      slice(*filter.keys).each do |key, value|
+        next unless value
 
-          if filter[key] == []
-            # Declaration {:comment_ids => []}.
-            array_of_permitted_scalars_filter(params, key)
-          else
-            # Declaration {:user => :name} or {:user => [:name, :age, {:adress => ...}]}.
-            params[key] = each_element(value) do |element, index|
-              if element.is_a?(Hash)
-                element = self.class.new(element) unless element.respond_to?(:permit)
-                element.permit(*Array.wrap(filter[key]))
-              elsif filter[key].is_a?(Hash) && filter[key][index] == []
-                array_of_permitted_scalars_filter(params, index, value)
-              end
-            end
-          end
-        end
-      end
-
-      def each_element(value)
-        if value.is_a?(Array)
-          value.map { |el| yield el }.compact
-          # fields_for on an array of records uses numeric hash keys.
-        elsif fields_for_style?(value)
-          hash = value.class.new
-          value.each { |k,v| hash[k] = yield(v, k) }
-          hash
+        if filter[key] == []
+          # Declaration {:comment_ids => []}.
+          array_of_permitted_scalars_filter(params, key)
         else
-          yield value
+          # Declaration {:user => :name} or {:user => [:name, :age, {:adress => ...}]}.
+          params[key] = each_element(value) do |element, index|
+            if element.is_a?(Hash)
+              element = self.class.new(element) unless element.respond_to?(:permit)
+              element.permit(*Array.wrap(filter[key]))
+            elsif filter[key].is_a?(Hash) && filter[key][index] == []
+              array_of_permitted_scalars_filter(params, index, value)
+            end
+          end
         end
       end
+    end
 
-      def fields_for_style?(object)
-        object.is_a?(Hash) && object.all? { |k, v| k =~ /\A-?\d+\z/ && v.is_a?(Hash) }
+    def each_element(value)
+      if value.is_a?(Array)
+        value.map { |el| yield el }.compact
+        # fields_for on an array of records uses numeric hash keys.
+      elsif fields_for_style?(value)
+        hash = value.class.new
+        value.each { |k, v| hash[k] = yield(v, k) }
+        hash
+      else
+        yield value
       end
+    end
 
-      def unpermitted_parameters!(params)  
-        return unless self.class.action_on_unpermitted_parameters
-        
-        unpermitted_keys = unpermitted_keys(params)
+    def fields_for_style?(object)
+      object.is_a?(Hash) && object.all? { |k, v| k =~ /\A-?\d+\z/ && v.is_a?(Hash) }
+    end
 
-        if unpermitted_keys.any?  
-          case self.class.action_on_unpermitted_parameters  
-          when :log
-            name = "unpermitted_parameters.action_controller"
-            ActiveSupport::Notifications.instrument(name, :keys => unpermitted_keys)
-          when :raise  
-            raise ActionController::UnpermittedParameters.new(unpermitted_keys)  
-          end  
-        end  
-      end  
-  
-      def unpermitted_keys(params)
-        self.keys - params.keys - NEVER_UNPERMITTED_PARAMS
+    def unpermitted_parameters!(params)
+      return unless self.class.action_on_unpermitted_parameters
+
+      unpermitted_keys = unpermitted_keys(params)
+
+      if unpermitted_keys.any?
+        case self.class.action_on_unpermitted_parameters
+        when :log
+          name = "unpermitted_parameters.action_controller"
+          ActiveSupport::Notifications.instrument(name, keys: unpermitted_keys)
+        when :raise
+          raise ActionController::UnpermittedParameters.new(unpermitted_keys)
+        end
       end
+    end
 
-      # Validate that all provided metadata keys are allowed by the params class.
-      #
-      # @param params_class [Class] the params class to validate against
-      # @param metadata_keys [Array<Symbol>] the metadata keys to validate
-      # @raise [ArgumentError] if any metadata keys are not declared
-      # @return [void]
-      def validate_metadata_keys!(params_class, metadata_keys)
-        return if metadata_keys.empty?
+    def unpermitted_keys(params)
+      keys - params.keys - NEVER_UNPERMITTED_PARAMS
+    end
 
-        disallowed_keys = metadata_keys.reject { |key| params_class.metadata_allowed?(key) }
+    # Validate that all provided metadata keys are allowed by the params class.
+    #
+    # @param params_class [Class] the params class to validate against
+    # @param metadata_keys [Array<Symbol>] the metadata keys to validate
+    # @raise [ArgumentError] if any metadata keys are not declared
+    # @return [void]
+    def validate_metadata_keys!(params_class, metadata_keys)
+      return if metadata_keys.empty?
 
-        return unless disallowed_keys.any?
+      disallowed_keys = metadata_keys.reject { |key| params_class.metadata_allowed?(key) }
 
-        # Build a helpful error message
-        keys_list = disallowed_keys.map(&:inspect).join(', ')
-        class_name = params_class.name
+      return unless disallowed_keys.any?
 
-        raise ArgumentError, <<~ERROR.strip
-          Metadata key(s) #{keys_list} not allowed for #{class_name}.
+      # Build a helpful error message
+      keys_list = disallowed_keys.map(&:inspect).join(", ")
+      class_name = params_class.name
 
-          To fix this, declare them in your params class:
+      raise ArgumentError, <<~ERROR.strip
+        Metadata key(s) #{keys_list} not allowed for #{class_name}.
 
-            class #{class_name} < ApplicationParams
-              metadata #{disallowed_keys.map(&:inspect).join(', ')}
-            end
+        To fix this, declare them in your params class:
 
-          Note: :current_user is always implicitly allowed and doesn't need to be declared.
-        ERROR
-      end
+          class #{class_name} < ApplicationParams
+            metadata #{disallowed_keys.map(&:inspect).join(", ")}
+          end
+
+        Note: :current_user is always implicitly allowed and doesn't need to be declared.
+      ERROR
+    end
   end
 
   # Controller integration module for Strong Parameters.
@@ -500,7 +507,7 @@ module ActionController
     included do
       rescue_from(ActionController::ParameterMissing) do |parameter_missing_exception|
         render text: "Required parameter missing: #{parameter_missing_exception.param}",
-               status: :bad_request
+          status: :bad_request
       end
     end
 

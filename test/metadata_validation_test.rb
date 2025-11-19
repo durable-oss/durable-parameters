@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class MetadataValidationTest < Minitest::Test
   def setup
@@ -6,7 +6,7 @@ class MetadataValidationTest < Minitest::Test
 
     @basic_params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'BasicParams'
+        "BasicParams"
       end
 
       allow :name
@@ -15,7 +15,7 @@ class MetadataValidationTest < Minitest::Test
 
     @params_with_metadata = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ParamsWithMetadata'
+        "ParamsWithMetadata"
       end
 
       allow :name
@@ -23,8 +23,8 @@ class MetadataValidationTest < Minitest::Test
       metadata :ip_address, :user_agent, :session_id
     end
 
-    ActionController::ParamsRegistry.register('Basic', @basic_params_class)
-    ActionController::ParamsRegistry.register('WithMetadata', @params_with_metadata)
+    ActionController::ParamsRegistry.register("Basic", @basic_params_class)
+    ActionController::ParamsRegistry.register("WithMetadata", @params_with_metadata)
   end
 
   def teardown
@@ -35,22 +35,22 @@ class MetadataValidationTest < Minitest::Test
   def test_current_user_always_allowed_without_declaration
     params = ActionController::Parameters.new(
       basic: {
-        name: 'Test User',
-        email: 'test@example.com'
+        name: "Test User",
+        email: "test@example.com"
       }
     )
 
     # Should not raise even though current_user not declared
     permitted = params.require(:basic).transform_params(current_user: Object.new)
 
-    assert_equal 'Test User', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test User", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test metadata_allowed? method
   def test_metadata_allowed_returns_true_for_current_user
     assert @basic_params_class.metadata_allowed?(:current_user)
-    assert @basic_params_class.metadata_allowed?('current_user')
+    assert @basic_params_class.metadata_allowed?("current_user")
   end
 
   def test_metadata_allowed_returns_false_for_undeclared_keys
@@ -60,7 +60,7 @@ class MetadataValidationTest < Minitest::Test
 
   def test_metadata_allowed_returns_true_for_declared_keys
     assert @params_with_metadata.metadata_allowed?(:ip_address)
-    assert @params_with_metadata.metadata_allowed?('user_agent')
+    assert @params_with_metadata.metadata_allowed?("user_agent")
     assert @params_with_metadata.metadata_allowed?(:session_id)
   end
 
@@ -68,110 +68,110 @@ class MetadataValidationTest < Minitest::Test
   def test_multiple_metadata_keys_can_be_passed
     params = ActionController::Parameters.new(
       with_metadata: {
-        name: 'Test User',
-        email: 'test@example.com'
+        name: "Test User",
+        email: "test@example.com"
       }
     )
 
     # Should not raise with all declared metadata
     permitted = params.require(:with_metadata).transform_params(
       current_user: Object.new,
-      ip_address: '192.168.1.1',
-      user_agent: 'Mozilla/5.0',
-      session_id: 'abc123'
+      ip_address: "192.168.1.1",
+      user_agent: "Mozilla/5.0",
+      session_id: "abc123"
     )
 
-    assert_equal 'Test User', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test User", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test error messages
   def test_error_message_includes_undeclared_key
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     error = assert_raises(ArgumentError) do
-      params.require(:basic).transform_params(ip_address: '127.0.0.1')
+      params.require(:basic).transform_params(ip_address: "127.0.0.1")
     end
 
-    assert_includes error.message, 'ip_address'
+    assert_includes error.message, "ip_address"
   end
 
   def test_error_message_includes_params_class_name
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     error = assert_raises(ArgumentError) do
-      params.require(:basic).transform_params(ip_address: '127.0.0.1')
+      params.require(:basic).transform_params(ip_address: "127.0.0.1")
     end
 
-    assert_includes error.message, 'BasicParams'
+    assert_includes error.message, "BasicParams"
   end
 
   def test_error_message_includes_declaration_hint
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     error = assert_raises(ArgumentError) do
-      params.require(:basic).transform_params(ip_address: '127.0.0.1')
+      params.require(:basic).transform_params(ip_address: "127.0.0.1")
     end
 
-    assert_includes error.message, 'metadata :ip_address'
+    assert_includes error.message, "metadata :ip_address"
   end
 
   def test_error_message_mentions_current_user_is_always_allowed
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     error = assert_raises(ArgumentError) do
-      params.require(:basic).transform_params(ip_address: '127.0.0.1')
+      params.require(:basic).transform_params(ip_address: "127.0.0.1")
     end
 
-    assert_includes error.message, 'current_user is always allowed'
+    assert_includes error.message, "current_user is always allowed"
   end
 
   # Test multiple undeclared keys
   def test_multiple_undeclared_keys_all_mentioned_in_error
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     error = assert_raises(ArgumentError) do
       params.require(:basic).transform_params(
-        ip_address: '127.0.0.1',
-        user_agent: 'Mozilla',
-        device_id: 'xyz'
+        ip_address: "127.0.0.1",
+        user_agent: "Mozilla",
+        device_id: "xyz"
       )
     end
 
-    assert_includes error.message, 'ip_address'
-    assert_includes error.message, 'user_agent'
-    assert_includes error.message, 'device_id'
+    assert_includes error.message, "ip_address"
+    assert_includes error.message, "user_agent"
+    assert_includes error.message, "device_id"
   end
 
   # Test metadata doesn't affect the actual parameter filtering
   def test_metadata_keys_dont_affect_parameter_filtering
     params = ActionController::Parameters.new(
       with_metadata: {
-        name: 'Test User',
-        email: 'test@example.com',
-        ip_address: 'should not be in result',
-        user_agent: 'should not be in result'
+        name: "Test User",
+        email: "test@example.com",
+        ip_address: "should not be in result",
+        user_agent: "should not be in result"
       }
     )
 
     permitted = params.require(:with_metadata).transform_params(
       current_user: Object.new,
-      ip_address: '192.168.1.1',
-      user_agent: 'Mozilla/5.0'
+      ip_address: "192.168.1.1",
+      user_agent: "Mozilla/5.0"
     )
 
-    assert_equal 'Test User', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test User", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
     # These should not be in the permitted params because they're metadata, not allowed attributes
     assert_nil permitted[:ip_address]
     assert_nil permitted[:user_agent]
@@ -181,7 +181,7 @@ class MetadataValidationTest < Minitest::Test
   def test_metadata_inherited_from_parent
     parent_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ParentParams'
+        "ParentParams"
       end
 
       allow :name
@@ -190,7 +190,7 @@ class MetadataValidationTest < Minitest::Test
 
     child_class = Class.new(parent_class) do
       def self.name
-        'ChildParams'
+        "ChildParams"
       end
 
       allow :email
@@ -224,37 +224,37 @@ class MetadataValidationTest < Minitest::Test
   # Test metadata with string keys
   def test_metadata_works_with_string_keys
     test_class = Class.new(ActionController::ApplicationParams) do
-      metadata 'string_key'
+      metadata "string_key"
     end
 
     assert test_class.metadata_allowed?(:string_key)
-    assert test_class.metadata_allowed?('string_key')
+    assert test_class.metadata_allowed?("string_key")
   end
 
   # Test that action and additional_attrs are not treated as metadata
   def test_action_option_not_treated_as_metadata
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     # Should not raise even though action not declared as metadata
     permitted = params.require(:basic).transform_params(action: :create)
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
   end
 
   def test_additional_attrs_option_not_treated_as_metadata
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     # Should not raise even though additional_attrs not declared as metadata
     permitted = params.require(:basic).transform_params(additional_attrs: [:other])
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
   end
 
   def test_action_and_additional_attrs_with_current_user_all_work
     params = ActionController::Parameters.new(
-      basic: { name: 'Test' }
+      basic: {name: "Test"}
     )
 
     # Should not raise with all non-metadata options
@@ -263,13 +263,13 @@ class MetadataValidationTest < Minitest::Test
       additional_attrs: [:other],
       current_user: Object.new
     )
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
   end
 
   # Test nil and empty values
   def test_nil_metadata_values_allowed
     params = ActionController::Parameters.new(
-      with_metadata: { name: 'Test' }
+      with_metadata: {name: "Test"}
     )
 
     # Should not raise with nil metadata value
@@ -277,18 +277,18 @@ class MetadataValidationTest < Minitest::Test
       current_user: nil,
       ip_address: nil
     )
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
   end
 
   def test_empty_string_metadata_values_allowed
     params = ActionController::Parameters.new(
-      with_metadata: { name: 'Test' }
+      with_metadata: {name: "Test"}
     )
 
     # Should not raise with empty string metadata value
     permitted = params.require(:with_metadata).transform_params(
-      ip_address: ''
+      ip_address: ""
     )
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
   end
 end

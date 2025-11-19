@@ -8,8 +8,8 @@ unless File.respond_to?(:exists?)
   end
 end
 
-require 'minitest/autorun'
-require 'rails'
+require "minitest/autorun"
+require "rails"
 
 class FakeApplication < Rails::Application; end
 
@@ -18,12 +18,12 @@ Rails.configuration.action_controller = ActiveSupport::OrderedOptions.new
 
 # Define routes for controller tests
 Rails.application.routes.draw do
-  post 'people/create' => 'people#create'
-  post 'people/create_with_permit' => 'people#create_with_permit'
-  post 'books/create' => 'books#create'
+  post "people/create" => "people#create"
+  post "people/create_with_permit" => "people#create_with_permit"
+  post "books/create" => "books#create"
 end
 
-require 'durable_parameters'
+require "durable_parameters"
 
 # Manually setup Rails adapter since we're not going through full Rails initialization
 StrongParameters::Adapters::Rails.setup!
@@ -35,4 +35,4 @@ StrongParameters::Adapters::Rails.setup!
 ActionController::Parameters.action_on_unpermitted_parameters = false
 
 # Load support files
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |f| require f }

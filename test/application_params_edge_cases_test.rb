@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class ApplicationParamsEdgeCasesTest < Minitest::Test
   def setup
@@ -78,10 +78,10 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
   # Test flag with different value types
   def test_flag_with_string_value
     test_class = Class.new(ActionController::ApplicationParams) do
-      flag :status, 'active'
+      flag :status, "active"
     end
 
-    assert_equal 'active', test_class.flag?(:status)
+    assert_equal "active", test_class.flag?(:status)
   end
 
   def test_flag_with_numeric_value
@@ -102,10 +102,10 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
 
   def test_flag_with_hash_value
     test_class = Class.new(ActionController::ApplicationParams) do
-      flag :config, { min: 1, max: 10 }
+      flag :config, {min: 1, max: 10}
     end
 
-    assert_equal({ min: 1, max: 10 }, test_class.flag?(:config))
+    assert_equal({min: 1, max: 10}, test_class.flag?(:config))
   end
 
   # Test attribute options with different formats
@@ -223,8 +223,8 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
   # Test symbol/string conversions
   def test_allow_converts_string_to_symbol
     test_class = Class.new(ActionController::ApplicationParams) do
-      allow 'name'
-      allow 'email'
+      allow "name"
+      allow "email"
     end
 
     assert_includes test_class.allowed_attributes, :name
@@ -233,7 +233,7 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
 
   def test_deny_converts_string_to_symbol
     test_class = Class.new(ActionController::ApplicationParams) do
-      deny 'admin'
+      deny "admin"
     end
 
     assert_includes test_class.denied_attributes, :admin
@@ -241,11 +241,11 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
 
   def test_flag_converts_string_name_to_symbol
     test_class = Class.new(ActionController::ApplicationParams) do
-      flag 'test_flag', true
+      flag "test_flag", true
     end
 
     assert test_class.flag?(:test_flag)
-    assert test_class.flag?('test_flag')
+    assert test_class.flag?("test_flag")
   end
 
   # Test permitted_attributes without action filter
@@ -278,13 +278,13 @@ class ApplicationParamsEdgeCasesTest < Minitest::Test
   def test_metadata_with_mixed_symbol_string
     test_class = Class.new(ActionController::ApplicationParams) do
       metadata :key1
-      metadata 'key2'
+      metadata "key2"
     end
 
     assert test_class.metadata_allowed?(:key1)
-    assert test_class.metadata_allowed?('key1')
+    assert test_class.metadata_allowed?("key1")
     assert test_class.metadata_allowed?(:key2)
-    assert test_class.metadata_allowed?('key2')
+    assert test_class.metadata_allowed?("key2")
   end
 
   # Test attribute_options with non-existent attribute

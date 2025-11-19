@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class TransformParamsEdgeCasesTest < Minitest::Test
   def setup
@@ -6,7 +6,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
 
     @user_params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'UserParams'
+        "UserParams"
       end
 
       allow :name
@@ -16,7 +16,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       metadata :ip_address
     end
 
-    ActionController::ParamsRegistry.register('User', @user_params_class)
+    ActionController::ParamsRegistry.register("User", @user_params_class)
   end
 
   def teardown
@@ -26,12 +26,12 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   # Test without require
   def test_transform_params_without_require_returns_empty
     params = ActionController::Parameters.new(
-      name: 'John',
-      email: 'john@example.com'
+      name: "John",
+      email: "john@example.com"
     )
 
     # Without require, no required_key is set
-    permitted = params.transform_params()
+    permitted = params.transform_params
 
     assert permitted.permitted?
     assert_nil permitted[:name]
@@ -42,12 +42,12 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_unregistered_model_returns_empty
     params = ActionController::Parameters.new(
       unregistered: {
-        name: 'Test',
+        name: "Test",
         value: 123
       }
     )
 
-    permitted = params.require(:unregistered).transform_params()
+    permitted = params.require(:unregistered).transform_params
 
     assert permitted.permitted?
     assert_nil permitted[:name]
@@ -58,8 +58,8 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_explicit_nil_class_returns_empty
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com'
+        name: "Test",
+        email: "test@example.com"
       }
     )
 
@@ -81,7 +81,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
     user_params = params[:user]
     user_params.required_key = :user
 
-    permitted = user_params.transform_params()
+    permitted = user_params.transform_params
 
     assert permitted.permitted?
     assert_equal({}, permitted.to_h)
@@ -92,42 +92,42 @@ class TransformParamsEdgeCasesTest < Minitest::Test
     params = ActionController::Parameters.new(
       user: {
         name: nil,
-        email: 'test@example.com'
+        email: "test@example.com"
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
     assert_nil permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test with empty string values
   def test_transform_params_preserves_empty_strings
     params = ActionController::Parameters.new(
       user: {
-        name: '',
-        email: 'test@example.com'
+        name: "",
+        email: "test@example.com"
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
-    assert_equal '', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test with numeric values
   def test_transform_params_with_numeric_values
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'ProductParams'
+        "ProductParams"
       end
       allow :price
       allow :quantity
     end
 
-    ActionController::ParamsRegistry.register('Product', test_class)
+    ActionController::ParamsRegistry.register("Product", test_class)
 
     params = ActionController::Parameters.new(
       product: {
@@ -136,7 +136,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       }
     )
 
-    permitted = params.require(:product).transform_params()
+    permitted = params.require(:product).transform_params
 
     assert_equal 19.99, permitted[:price]
     assert_equal 5, permitted[:quantity]
@@ -146,13 +146,13 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_boolean_values
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'SettingsParams'
+        "SettingsParams"
       end
       allow :enabled
       allow :public
     end
 
-    ActionController::ParamsRegistry.register('Settings', test_class)
+    ActionController::ParamsRegistry.register("Settings", test_class)
 
     params = ActionController::Parameters.new(
       settings: {
@@ -161,7 +161,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       }
     )
 
-    permitted = params.require(:settings).transform_params()
+    permitted = params.require(:settings).transform_params
 
     assert_equal true, permitted[:enabled]
     assert_equal false, permitted[:public]
@@ -172,91 +172,91 @@ class TransformParamsEdgeCasesTest < Minitest::Test
     params = ActionController::Parameters.new(
       user: {
         name: "O'Brien",
-        email: 'test+spam@example.com'
+        email: "test+spam@example.com"
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
     assert_equal "O'Brien", permitted[:name]
-    assert_equal 'test+spam@example.com', permitted[:email]
+    assert_equal "test+spam@example.com", permitted[:email]
   end
 
   # Test with unicode characters
   def test_transform_params_with_unicode_characters
     params = ActionController::Parameters.new(
       user: {
-        name: '日本語',
-        email: 'test@example.com'
+        name: "日本語",
+        email: "test@example.com"
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
-    assert_equal '日本語', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "日本語", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test action filter with string action
   def test_transform_params_with_string_action
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        status: 'active'
+        name: "Test",
+        status: "active"
       }
     )
 
-    permitted = params.require(:user).transform_params(action: 'create')
+    permitted = params.require(:user).transform_params(action: "create")
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'active', permitted[:status]
+    assert_equal "Test", permitted[:name]
+    assert_equal "active", permitted[:status]
   end
 
   # Test action filter with non-existent action
   def test_transform_params_with_non_matching_action
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        status: 'active',
-        role: 'admin'
+        name: "Test",
+        status: "active",
+        role: "admin"
       }
     )
 
     permitted = params.require(:user).transform_params(action: :show)
 
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
     assert_nil permitted[:status]  # only allowed for create/update
-    assert_equal 'admin', permitted[:role]  # allowed except for destroy
+    assert_equal "admin", permitted[:role]  # allowed except for destroy
   end
 
   # Test additional_attrs with empty array
   def test_transform_params_with_empty_additional_attrs
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com'
+        name: "Test",
+        email: "test@example.com"
       }
     )
 
     permitted = params.require(:user).transform_params(additional_attrs: [])
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
   end
 
   # Test additional_attrs with non-existent attributes
   def test_transform_params_additional_attrs_non_existent
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com'
+        name: "Test",
+        email: "test@example.com"
       }
     )
 
     permitted = params.require(:user).transform_params(additional_attrs: [:non_existent])
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
     assert_nil permitted[:non_existent]
   end
 
@@ -264,16 +264,16 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_additional_attrs_with_strings
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com',
+        name: "Test",
+        email: "test@example.com",
         age: 30
       }
     )
 
-    permitted = params.require(:user).transform_params(additional_attrs: ['age'])
+    permitted = params.require(:user).transform_params(additional_attrs: ["age"])
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
+    assert_equal "Test", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
     assert_equal 30, permitted[:age]
   end
 
@@ -281,9 +281,9 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_action_and_additional_attrs
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com',
-        status: 'active',
+        name: "Test",
+        email: "test@example.com",
+        status: "active",
         age: 30
       }
     )
@@ -293,9 +293,9 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       additional_attrs: [:age]
     )
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
-    assert_equal 'active', permitted[:status]
+    assert_equal "Test", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
+    assert_equal "active", permitted[:status]
     assert_equal 30, permitted[:age]
   end
 
@@ -303,9 +303,9 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_all_options
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com',
-        status: 'active',
+        name: "Test",
+        email: "test@example.com",
+        status: "active",
         age: 30
       }
     )
@@ -314,12 +314,12 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       action: :create,
       additional_attrs: [:age],
       current_user: Object.new,
-      ip_address: '127.0.0.1'
+      ip_address: "127.0.0.1"
     )
 
-    assert_equal 'Test', permitted[:name]
-    assert_equal 'test@example.com', permitted[:email]
-    assert_equal 'active', permitted[:status]
+    assert_equal "Test", permitted[:name]
+    assert_equal "test@example.com", permitted[:email]
+    assert_equal "active", permitted[:status]
     assert_equal 30, permitted[:age]
   end
 
@@ -327,7 +327,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_required_key_preserved_after_require
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test'
+        name: "Test"
       }
     )
 
@@ -339,16 +339,16 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_explicit_params_class_overrides_registry
     other_params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'OtherParams'
+        "OtherParams"
       end
       allow :different_field
     end
 
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com',
-        different_field: 'value'
+        name: "Test",
+        email: "test@example.com",
+        different_field: "value"
       }
     )
 
@@ -357,21 +357,21 @@ class TransformParamsEdgeCasesTest < Minitest::Test
 
     assert_nil permitted[:name]
     assert_nil permitted[:email]
-    assert_equal 'value', permitted[:different_field]
+    assert_equal "value", permitted[:different_field]
   end
 
   # Test with array values
   def test_transform_params_does_not_permit_arrays_without_explicit_declaration
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        tags: ['tag1', 'tag2']
+        name: "Test",
+        tags: ["tag1", "tag2"]
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
     assert_nil permitted[:tags]  # Arrays not permitted by default
   end
 
@@ -379,17 +379,17 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_does_not_permit_nested_hashes_without_explicit_declaration
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
+        name: "Test",
         address: {
-          street: '123 Main St',
-          city: 'NYC'
+          street: "123 Main St",
+          city: "NYC"
         }
       }
     )
 
-    permitted = params.require(:user).transform_params()
+    permitted = params.require(:user).transform_params
 
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
     assert_nil permitted[:address]  # Nested hashes not permitted by default
   end
 
@@ -397,50 +397,50 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_metadata_validation_with_explicit_params_class
     other_params_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'OtherParams'
+        "OtherParams"
       end
       allow :field
       # No metadata declared
     end
 
     params = ActionController::Parameters.new(
-      user: { field: 'value' }
+      user: {field: "value"}
     )
 
     # Should validate against explicit class, not registry
     error = assert_raises(ArgumentError) do
       params.require(:user).transform_params(
         other_params_class,
-        ip_address: '127.0.0.1'
+        ip_address: "127.0.0.1"
       )
     end
 
-    assert_includes error.message, 'OtherParams'
-    assert_includes error.message, 'ip_address'
+    assert_includes error.message, "OtherParams"
+    assert_includes error.message, "ip_address"
   end
 
   # Test case sensitivity
   def test_transform_params_attribute_names_case_sensitive
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'CaseParams'
+        "CaseParams"
       end
       allow :Name  # capital N
     end
 
-    ActionController::ParamsRegistry.register('Case', test_class)
+    ActionController::ParamsRegistry.register("Case", test_class)
 
     params = ActionController::Parameters.new(
       case: {
-        name: 'lowercase',  # lowercase n
-        Name: 'capitalized'
+        name: "lowercase",  # lowercase n
+        Name: "capitalized"
       }
     )
 
-    permitted = params.require(:case).transform_params()
+    permitted = params.require(:case).transform_params
 
     # Should only permit the exact case match
-    assert_equal 'capitalized', permitted[:Name]
+    assert_equal "capitalized", permitted[:Name]
     assert_nil permitted[:name]
   end
 
@@ -448,13 +448,13 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_date_time_objects
     test_class = Class.new(ActionController::ApplicationParams) do
       def self.name
-        'EventParams'
+        "EventParams"
       end
       allow :scheduled_at
       allow :date
     end
 
-    ActionController::ParamsRegistry.register('Event', test_class)
+    ActionController::ParamsRegistry.register("Event", test_class)
 
     now = Time.now
     today = Date.today
@@ -466,7 +466,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       }
     )
 
-    permitted = params.require(:event).transform_params()
+    permitted = params.require(:event).transform_params
 
     assert_equal now, permitted[:scheduled_at]
     assert_equal today, permitted[:date]
@@ -476,7 +476,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_with_duplicate_additional_attrs
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
+        name: "Test",
         age: 30
       }
     )
@@ -486,7 +486,7 @@ class TransformParamsEdgeCasesTest < Minitest::Test
       additional_attrs: [:name, :age, :name]
     )
 
-    assert_equal 'Test', permitted[:name]
+    assert_equal "Test", permitted[:name]
     assert_equal 30, permitted[:age]
   end
 
@@ -494,13 +494,13 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_returns_new_instance
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com'
+        name: "Test",
+        email: "test@example.com"
       }
     )
 
     user_params = params.require(:user)
-    permitted = user_params.transform_params()
+    permitted = user_params.transform_params
 
     refute_equal user_params.object_id, permitted.object_id
   end
@@ -509,14 +509,14 @@ class TransformParamsEdgeCasesTest < Minitest::Test
   def test_transform_params_does_not_modify_original
     params = ActionController::Parameters.new(
       user: {
-        name: 'Test',
-        email: 'test@example.com',
+        name: "Test",
+        email: "test@example.com",
         admin: true
       }
     )
 
     user_params = params.require(:user)
-    permitted = user_params.transform_params()
+    permitted = user_params.transform_params
 
     # Original should still have all keys
     assert user_params.key?(:admin)

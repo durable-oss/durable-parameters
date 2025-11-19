@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class BooksController < ActionController::Base
   def create
@@ -17,20 +17,20 @@ class ActionControllerRequiredParamsTest < ActionController::TestCase
   end
 
   def test_missing_required_parameters_will_raise_exception
-    post :create, params: { :magazine => { :name => "Mjallo!" } }
+    post :create, params: {magazine: {name: "Mjallo!"}}
     assert_response :bad_request
 
-    post :create, params: { :book => { :title => "Mjallo!" } }
+    post :create, params: {book: {title: "Mjallo!"}}
     assert_response :bad_request
   end
 
   def test_required_parameters_that_are_present_will_not_raise
-    post :create, params: { :book => { :name => "Mjallo!" } }
+    post :create, params: {book: {name: "Mjallo!"}}
     assert_response :ok
   end
 
   def test_missing_parameters_will_be_mentioned_in_the_response
-    post :create, params: { :magazine => { :name => "Mjallo!" } }
+    post :create, params: {magazine: {name: "Mjallo!"}}
     assert_includes response.body, "book"
   end
 end

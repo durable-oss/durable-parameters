@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class PeopleController < ActionController::Base
   def create
@@ -18,12 +18,12 @@ class ActionControllerTaintedParamsTest < ActionController::TestCase
   end
 
   def test_parameters_are_tainted
-    post :create, params: { :person => { :name => "Mjallo!" } }
+    post :create, params: {person: {name: "Mjallo!"}}
     assert_equal "tainted", response.body
   end
 
   def test_parameters_can_be_permitted_and_are_then_not_tainted
-    post :create_with_permit, params: { :person => { :name => "Mjallo!" } }
+    post :create_with_permit, params: {person: {name: "Mjallo!"}}
     assert_equal "untainted", response.body
   end
 end

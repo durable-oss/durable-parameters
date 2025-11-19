@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'active_support/concern'
-require 'active_support/core_ext/hash/indifferent_access'
-require 'active_support/core_ext/array/wrap'
-require 'action_controller'
-require 'action_dispatch/http/upload'
-require 'durable_parameters/core'
+require "active_support/concern"
+require "active_support/core_ext/hash/indifferent_access"
+require "active_support/core_ext/array/wrap"
+require "action_controller"
+require "action_dispatch/http/upload"
+require "durable_parameters/core"
 
 module StrongParameters
   module Adapters
@@ -60,7 +60,7 @@ module StrongParameters
           validate_metadata_keys!(params_class, metadata_keys)
 
           # Apply transformations first (before filtering)
-          transformed_hash = params_class.apply_transformations(self.to_unsafe_h, options)
+          transformed_hash = params_class.apply_transformations(to_unsafe_h, options)
 
           # Create a new Parameters object from the transformed hash
           transformed_params = self.class.new(transformed_hash)
@@ -87,7 +87,7 @@ module StrongParameters
 
         # Override require to track the required_key for transform_params
         def require(key)
-          value = super(key)
+          value = super
           # Track the required key so transform_params can infer the params class
           if value.is_a?(::ActionController::Parameters)
             value.instance_variable_set(:@required_key, key.to_sym)
@@ -97,7 +97,7 @@ module StrongParameters
 
         # Override slice to preserve required_key
         def slice(*keys)
-          sliced = super(*keys)
+          sliced = super
           if sliced.is_a?(::ActionController::Parameters)
             sliced.instance_variable_set(:@required_key, @required_key)
           end
@@ -115,7 +115,7 @@ module StrongParameters
           return unless disallowed_keys.any?
 
           # Build a helpful error message
-          keys_list = disallowed_keys.map(&:inspect).join(', ')
+          keys_list = disallowed_keys.map(&:inspect).join(", ")
           class_name = params_class.name
 
           raise ArgumentError, <<~ERROR.strip
@@ -124,7 +124,7 @@ module StrongParameters
             To fix this, declare them in your params class:
 
               class #{class_name} < ApplicationParams
-                metadata #{disallowed_keys.map(&:inspect).join(', ')}
+                metadata #{disallowed_keys.map(&:inspect).join(", ")}
               end
 
             Note: :current_user is always allowed and doesn't need to be declared.
@@ -149,30 +149,30 @@ module StrongParameters
         # Access parameter value with indifferent access (string or symbol)
         def [](key)
           key = key.to_s if key.is_a?(Symbol)
-          convert_hashes_to_parameters(key, super(key))
+          convert_hashes_to_parameters(key, super)
         end
 
         def []=(key, value)
           key = key.to_s if key.is_a?(Symbol)
-          super(key, value)
+          super
         end
 
         def has_key?(key)
           key = key.to_s if key.is_a?(Symbol)
-          super(key)
+          super
         end
 
-        alias key? has_key?
-        alias include? has_key?
+        alias_method :key?, :has_key?
+        alias_method :include?, :has_key?
 
         def delete(key)
           key = key.to_s if key.is_a?(Symbol)
-          super(key)
+          super
         end
 
         def fetch(key, *args)
           key = key.to_s if key.is_a?(Symbol)
-          super(key, *args)
+          super
         end
 
         private
@@ -209,7 +209,7 @@ module StrongParameters
           included do
             rescue_from(ActionController::ParameterMissing) do |parameter_missing_exception|
               render plain: "Required parameter missing: #{parameter_missing_exception.param}",
-                     status: :bad_request
+                status: :bad_request
             end
           end
 

@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class RaiseOnUnpermittedParamsTest < Minitest::Test
   def setup
@@ -11,22 +11,22 @@ class RaiseOnUnpermittedParamsTest < Minitest::Test
 
   def test_raises_on_unexpected_params
     params = ActionController::Parameters.new({
-      :book => { :pages => 65 },
-      :fishing => "Turnips"
+      book: {pages: 65},
+      fishing: "Turnips"
     })
 
     assert_raises(ActionController::UnpermittedParameters) do
-      params.permit(:book => [:pages])
+      params.permit(book: [:pages])
     end
   end
 
   def test_raises_on_unexpected_nested_params
     params = ActionController::Parameters.new({
-      :book => { :pages => 65, :title => "Green Cats and where to find then." }
+      book: {pages: 65, title: "Green Cats and where to find then."}
     })
 
     assert_raises(ActionController::UnpermittedParameters) do
-      params.permit(:book => [:pages])
+      params.permit(book: [:pages])
     end
   end
 end

@@ -1,23 +1,23 @@
-require 'test_helper'
+require "test_helper"
 
 class MultiParameterAttributesTest < Minitest::Test
   def test_permitted_multi_parameter_attribute_keys
     params = ActionController::Parameters.new({
-      :book => {
-        "shipped_at(1i)"   => "2012",
-        "shipped_at(2i)"   => "3",
-        "shipped_at(3i)"   => "25",
-        "shipped_at(4i)"   => "10",
-        "shipped_at(5i)"   => "15",
+      book: {
+        "shipped_at(1i)" => "2012",
+        "shipped_at(2i)" => "3",
+        "shipped_at(3i)" => "25",
+        "shipped_at(4i)" => "10",
+        "shipped_at(5i)" => "15",
         "published_at(1i)" => "1999",
         "published_at(2i)" => "2",
         "published_at(3i)" => "5",
-        "price(1)"         => "R$",
-        "price(2f)"        => "2.02"
+        "price(1)" => "R$",
+        "price(2f)" => "2.02"
       }
     })
 
-    permitted = params.permit :book => [ :shipped_at, :price ]
+    permitted = params.permit book: [:shipped_at, :price]
 
     assert permitted.permitted?
 
@@ -35,4 +35,3 @@ class MultiParameterAttributesTest < Minitest::Test
     assert_nil permitted[:book]["published_at(3i)"]
   end
 end
-
