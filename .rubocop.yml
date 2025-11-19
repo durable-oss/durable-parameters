@@ -1,0 +1,17 @@
+inherit_gem:
+  standard: config/base.yml
+
+plugins:
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 2.6
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'lib/generators/rails/templates/**/*'
+
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false

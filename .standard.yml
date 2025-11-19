@@ -1,0 +1,4 @@
+ignore:
+  - 'vendor/**/*'
+  - 'tmp/**/*'
+  - 'lib/generators/rails/templates/**/*'
