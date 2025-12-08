@@ -271,7 +271,7 @@ module StrongParameters
         additional_attrs = options[:additional_attrs] || []
 
         # Infer params class from required_key if not explicitly provided
-        if params_class == :__infer__
+        if :__infer__.equal?(params_class)
           if @required_key
             params_class = ParamsRegistry.lookup(@required_key)
           else

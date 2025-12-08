@@ -41,7 +41,7 @@ module StrongParameters
           additional_attrs = options[:additional_attrs] || []
 
           # Infer params class from required_key if not explicitly provided
-          if params_class == :__infer__
+          if :__infer__.equal?(params_class)
             if instance_variable_defined?(:@required_key) && @required_key
               params_class = ::ActionController::ParamsRegistry.lookup(@required_key)
             else
@@ -270,9 +270,14 @@ module StrongParameters
         end
 
         # Inject into ActiveModel using const_set (Ruby 3.5 compatible) - only if ActiveModel is loaded
+        # Only set if not already defined to allow legacy versions to take precedence
         if defined?(::ActiveModel)
-          ::ActiveModel.const_set(:ForbiddenAttributes, ::StrongParameters::Core::ForbiddenAttributes) unless ::ActiveModel.const_defined?(:ForbiddenAttributes)
-          ::ActiveModel.const_set(:ForbiddenAttributesProtection, ::StrongParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection) unless ::ActiveModel.const_defined?(:ForbiddenAttributesProtection)
+          unless ::ActiveModel.const_defined?(:ForbiddenAttributes)
+            ::ActiveModel.const_set(:ForbiddenAttributes, ::StrongParameters::Core::ForbiddenAttributes)
+          end
+          unless ::ActiveModel.const_defined?(:ForbiddenAttributesProtection)
+            ::ActiveModel.const_set(:ForbiddenAttributesProtection, ::StrongParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection)
+          end
         end
       end
     end

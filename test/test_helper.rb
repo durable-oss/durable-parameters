@@ -11,6 +11,7 @@ end
 require "minitest/autorun"
 require "rails"
 require "active_support/testing/constant_stubbing"
+require "active_model"
 
 class FakeApplication < Rails::Application; end
 
@@ -37,3 +38,15 @@ ActionController::Parameters.action_on_unpermitted_parameters = false
 
 # Load support files
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |f| require f }
+
+# Global test setup for proper isolation
+class Minitest::Test
+  def teardown
+    super
+    # Clear the ParamsRegistry after each test to prevent pollution.
+    # This removes references to classes defined in tests, allowing them to be GC'd.
+    StrongParameters::Core::ParamsRegistry.clear! if defined?(StrongParameters::Core::ParamsRegistry)
+    ActionController::ParamsRegistry.clear! if defined?(ActionController::ParamsRegistry)
+    Legacy::ActionController::ParamsRegistry.clear! if defined?(Legacy::ActionController::ParamsRegistry)
+  end
+end

@@ -8,6 +8,11 @@ class ConfigurationTest < Minitest::Test
     @original_action = StrongParameters::Core::Configuration.action_on_unpermitted_parameters
     @original_handler = StrongParameters::Core::Configuration.unpermitted_notification_handler
     @original_always_permitted = StrongParameters::Core::Configuration.always_permitted_parameters
+
+    # Save original Parameters class settings
+    @original_params_action = StrongParameters::Core::Parameters.action_on_unpermitted_parameters
+    @original_params_handler = StrongParameters::Core::Parameters.unpermitted_notification_handler
+    @original_params_never_unpermitted = StrongParameters::Core::Parameters.never_unpermitted_params
   end
 
   def teardown
@@ -15,6 +20,11 @@ class ConfigurationTest < Minitest::Test
     StrongParameters::Core::Configuration.action_on_unpermitted_parameters = @original_action
     StrongParameters::Core::Configuration.unpermitted_notification_handler = @original_handler
     StrongParameters::Core::Configuration.always_permitted_parameters = @original_always_permitted
+
+    # Restore original Parameters class settings
+    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = @original_params_action
+    StrongParameters::Core::Parameters.unpermitted_notification_handler = @original_params_handler
+    StrongParameters::Core::Parameters.never_unpermitted_params = @original_params_never_unpermitted
   end
 
   def test_action_on_unpermitted_parameters_accessor
