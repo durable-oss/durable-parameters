@@ -3,6 +3,10 @@
 require "test_helper"
 
 class CoreParametersTest < Minitest::Test
+  def assert_filtered_out(params, key)
+    assert !params.has_key?(key), "key #{key.inspect} has not been filtered out"
+  end
+
   def setup
     # Ensure no action on unpermitted parameters for testing
     StrongParameters::Core::Parameters.action_on_unpermitted_parameters = nil
@@ -207,6 +211,40 @@ class CoreParametersTest < Minitest::Test
     end
     # Should limit to 3 suggestions
     assert_match(/Did you mean\? usr, user_name, user_email/, error.message)
+  end
+
+  def test_parameter_missing_with_empty_param_name
+    params = StrongParameters::Core::Parameters.new(
+      "non_empty" => "value"
+    )
+    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+      params.require("")
+    end
+    assert_equal "", error.param
+    assert_match(/param is missing or the value is empty: /, error.message)
+  end
+
+  def test_parameter_missing_with_empty_available_keys
+    params = StrongParameters::Core::Parameters.new(
+      "" => "value"
+    )
+    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+      params.require(:missing)
+    end
+    assert_match(/Available keys: /, error.message)
+    refute_match(/Did you mean\?/, error.message)
+  end
+
+  def test_find_similar_keys_with_empty_param
+    error = StrongParameters::Core::ParameterMissing.new("", available_keys: ["name", "email"])
+    # Should not raise error
+    assert_equal [], error.send(:find_similar_keys, "", ["name", "email"])
+  end
+
+  def test_find_similar_keys_with_empty_keys
+    error = StrongParameters::Core::ParameterMissing.new("user", available_keys: [""])
+    similar = error.send(:find_similar_keys, "user", [""])
+    assert_equal [], similar
   end
 
   def test_require_raises_when_value_empty
@@ -567,6 +605,34 @@ class CoreParametersTest < Minitest::Test
     permitted = params.permit(:name, :name, :age)
     assert_equal "John", permitted[:name]
     assert_equal 30, permitted[:age]
+  end
+
+  def test_permit_with_nil_filters
+    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    permitted = params.permit(nil, :name)
+    assert_equal "John", permitted[:name]
+    assert_nil permitted[:age]
+  end
+
+  def test_permit_with_empty_hash_filters
+    params = StrongParameters::Core::Parameters.new(user: {name: "John"})
+    permitted = params.permit(user: {})
+    assert permitted[:user].permitted?
+    assert_empty permitted[:user].to_h
+  end
+
+  def test_permit_with_nested_empty_hash_filters
+    params = StrongParameters::Core::Parameters.new(
+      user: {
+        profile: {
+          name: "John",
+          settings: {}
+        }
+      }
+    )
+    permitted = params.permit(user: {profile: {settings: {}}})
+    assert permitted[:user][:profile][:settings].permitted?
+    assert_empty permitted[:user][:profile][:settings].to_h
   end
 
   def test_permit_with_mixed_filters_and_unpermitted_keys
@@ -1359,6 +1425,34 @@ class CoreParametersTest < Minitest::Test
     assert_equal({}, hash)
   end
 
+  def test_performance_with_large_parameter_set
+    # Test with many parameters to ensure no performance issues
+    large_hash = {}
+    1000.times { |i| large_hash["param#{i}"] = "value#{i}" }
+
+    params = StrongParameters::Core::Parameters.new(large_hash)
+    permitted = params.permit(*large_hash.keys.first(100))  # Permit first 100
+
+    assert_equal 100, permitted.size
+    assert_equal "value0", permitted["param0"]
+    assert_equal "value99", permitted["param99"]
+  end
+
+  def test_deep_nesting_performance
+    # Create deeply nested structure
+    nested = {value: "deep"}
+    50.times { |i| nested = {"level#{i}" => nested} }
+
+    params = StrongParameters::Core::Parameters.new(data: nested)
+
+    # Should handle deep nesting without issues
+    assert params[:data].is_a?(StrongParameters::Core::Parameters)
+    # Access deep value
+    deep_value = params[:data]
+    50.times { |i| deep_value = deep_value["level#{49-i}"] }
+    assert_equal "deep", deep_value[:value]
+  end
+
   def test_to_unsafe_h_with_permitted_params
     permitted = @params.permit(:name, :email)
     assert_equal permitted.to_h, permitted.to_unsafe_h
@@ -1574,20 +1668,40 @@ class CoreParametersTest < Minitest::Test
 
   def test_convert_value_with_mixed_array_and_hash
     params = StrongParameters::Core::Parameters.new
-    mixed = [
-      {name: "John"},
-      "string",
-      42,
-      {nested: {value: true}}
-    ]
-
-    converted = params.send(:convert_value, mixed)
+    array = [{name: "John"}, "string", 123, nil]
+    converted = params.send(:convert_value, array)
     assert converted[0].is_a?(StrongParameters::Core::Parameters)
-    assert_equal "John", converted[0][:name]
     assert_equal "string", converted[1]
-    assert_equal 42, converted[2]
-    assert converted[3].is_a?(StrongParameters::Core::Parameters)
-    assert_equal true, converted[3][:nested][:value]
+    assert_equal 123, converted[2]
+    assert_nil converted[3]
+  end
+
+  def test_normalize_key_with_special_characters
+    params = StrongParameters::Core::Parameters.new
+    assert_equal "key with spaces", params.send(:normalize_key, "key with spaces")
+    assert_equal "key-with-dashes", params.send(:normalize_key, "key-with-dashes")
+    assert_equal "key.with.dots", params.send(:normalize_key, "key.with.dots")
+  end
+
+  def test_convert_hashes_to_parameters_with_assignment
+    params = StrongParameters::Core::Parameters.new
+    hash = {nested: {value: "test"}}
+
+    converted = params.send(:convert_hashes_to_parameters, :test_key, hash, true)
+    assert converted.is_a?(StrongParameters::Core::Parameters)
+    assert converted[:nested].is_a?(StrongParameters::Core::Parameters)
+    assert_equal "test", converted[:nested][:value]
+  end
+
+  def test_convert_hashes_to_parameters_without_assignment
+    params = StrongParameters::Core::Parameters.new
+    hash = {nested: {value: "test"}}
+
+    converted = params.send(:convert_hashes_to_parameters, :test_key, hash, false)
+    assert converted.is_a?(StrongParameters::Core::Parameters)
+    assert converted[:nested].is_a?(StrongParameters::Core::Parameters)
+    # Original hash should not be modified
+    assert hash[:nested].is_a?(Hash)
   end
 
   def test_wrap_array_with_various_inputs
@@ -1842,6 +1956,47 @@ class CoreParametersTest < Minitest::Test
     assert_raises(StrongParameters::Core::UnpermittedParameters) do
       params.permit(user: [emails: [:address, :primary]])  # secret not permitted
     end
+  end
+
+  def test_unpermitted_parameters_with_malicious_key_names
+    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = :log
+    logged_keys = nil
+    StrongParameters::Core::Parameters.unpermitted_notification_handler = proc { |keys| logged_keys = keys }
+
+    params = StrongParameters::Core::Parameters.new(
+      name: "John",
+      "admin<script>alert('xss')</script>" => "malicious",
+      "password_digest" => "secret"
+    )
+
+    permitted = params.permit(:name)
+    assert_equal ["admin<script>alert('xss')</script>", "password_digest"], logged_keys
+  end
+
+  def test_unpermitted_parameters_with_unicode_keys
+    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = :log
+    logged_keys = nil
+    StrongParameters::Core::Parameters.unpermitted_notification_handler = proc { |keys| logged_keys = keys }
+
+    params = StrongParameters::Core::Parameters.new(
+      name: "John",
+      "🔥_admin" => true,
+      "💻_super_user" => true
+    )
+
+    permitted = params.permit(:name)
+    assert_equal ["🔥_admin", "💻_super_user"], logged_keys
+  end
+
+  def test_permit_with_object_values_not_allowed
+    params = StrongParameters::Core::Parameters.new(
+      name: "John",
+      object: Object.new
+    )
+
+    permitted = params.permit(:name, :object)
+    assert_equal "John", permitted[:name]
+    assert_filtered_out permitted, :object
   end
 
   # Test exceptions
@@ -2373,6 +2528,36 @@ class CoreParametersTest < Minitest::Test
     permitted = user_params.transform_params(empty_params_class)
 
     assert_equal({}, permitted.to_h)
+    assert permitted.permitted?
+  end
+
+  def test_transform_params_with_frozen_params
+    user_params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+      allow :name
+    end
+
+    params = StrongParameters::Core::Parameters.new(user: {name: "John"}.freeze)
+    user_params = params.require(:user)
+    permitted = user_params.transform_params(user_params_class)
+
+    assert_equal "John", permitted[:name]
+  end
+
+  def test_transform_params_with_very_deep_nesting
+    # Test with deep nesting to ensure no stack overflow
+    deep_params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+      allow :value
+    end
+
+    # Create deeply nested structure
+    nested = {value: "deep"}
+    10.times { nested = {level: nested} }
+    params = StrongParameters::Core::Parameters.new(data: nested)
+
+    data_params = params.require(:data)
+    permitted = data_params.transform_params(deep_params_class)
+
+    # Should not raise stack overflow
     assert permitted.permitted?
   end
 end

@@ -66,33 +66,41 @@ class ConfigurationTest < Minitest::Test
     StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
     handler = proc { |keys| puts keys }
     StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
+    StrongParameters::Core::Configuration.always_permitted_parameters = %w[controller action format]
 
     StrongParameters::Core::Configuration.apply!
 
     assert_equal :log, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
     assert_equal handler, StrongParameters::Core::Parameters.unpermitted_notification_handler
+    assert_equal %w[controller action format], StrongParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_apply_synchronizes_nil_values
     StrongParameters::Core::Configuration.action_on_unpermitted_parameters = nil
     StrongParameters::Core::Configuration.unpermitted_notification_handler = nil
+    StrongParameters::Core::Configuration.always_permitted_parameters = []
 
     StrongParameters::Core::Configuration.apply!
 
     assert_nil StrongParameters::Core::Parameters.action_on_unpermitted_parameters
     assert_nil StrongParameters::Core::Parameters.unpermitted_notification_handler
+    assert_equal [], StrongParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_configuration_is_independent_of_parameters_class
     # Set configuration
     StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
+    StrongParameters::Core::Configuration.always_permitted_parameters = %w[custom]
 
     # Directly set Parameters class (without apply!)
     StrongParameters::Core::Parameters.action_on_unpermitted_parameters = :raise
+    StrongParameters::Core::Parameters.never_unpermitted_params = %w[other]
 
     # Configuration should not be affected
     assert_equal :log, StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    assert_equal %w[custom], StrongParameters::Core::Configuration.always_permitted_parameters
     assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[other], StrongParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_reset_and_apply_workflow
@@ -100,21 +108,26 @@ class ConfigurationTest < Minitest::Test
     StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
     custom_handler = proc { |keys| puts keys }
     StrongParameters::Core::Configuration.unpermitted_notification_handler = custom_handler
+    StrongParameters::Core::Configuration.always_permitted_parameters = %w[custom]
 
     # Apply to Parameters class
     StrongParameters::Core::Configuration.apply!
     assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[custom], StrongParameters::Core::Parameters.never_unpermitted_params
 
     # Reset configuration
     StrongParameters::Core::Configuration.reset!
     assert_nil StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    assert_equal %w[controller action], StrongParameters::Core::Configuration.always_permitted_parameters
 
     # Parameters class is not automatically updated
     assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[custom], StrongParameters::Core::Parameters.never_unpermitted_params
 
     # Apply again to synchronize
     StrongParameters::Core::Configuration.apply!
     assert_nil StrongParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[controller action], StrongParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_always_permitted_parameters_default
@@ -122,10 +135,22 @@ class ConfigurationTest < Minitest::Test
     assert_equal %w[controller action], StrongParameters::Core::Configuration.always_permitted_parameters
   end
 
+  def test_parameters_never_unpermitted_params_default
+    # Reset to ensure defaults
+    StrongParameters::Core::Configuration.reset!
+    StrongParameters::Core::Configuration.apply!
+    assert_equal %w[controller action], StrongParameters::Core::Parameters.never_unpermitted_params
+  end
+
   def test_always_permitted_parameters_frozen
     StrongParameters::Core::Configuration.reset!
     params = StrongParameters::Core::Configuration.always_permitted_parameters
     assert params.frozen?
+  end
+
+  def test_always_permitted_parameters_empty_array
+    StrongParameters::Core::Configuration.always_permitted_parameters = []
+    assert_equal [], StrongParameters::Core::Configuration.always_permitted_parameters
   end
 
   def test_multiple_resets
@@ -159,6 +184,20 @@ class ConfigurationTest < Minitest::Test
         StrongParameters::Core::Configuration.action_on_unpermitted_parameters = i.even? ? :log : :raise
         sleep 0.001
         StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+      end
+    end
+
+    results = threads.map(&:value)
+    # At least one thread should have set a value
+    refute results.all?(&:nil?)
+  end
+
+  def test_always_permitted_parameters_thread_safety
+    threads = 10.times.map do |i|
+      Thread.new do
+        StrongParameters::Core::Configuration.always_permitted_parameters = i.even? ? %w[controller action] : %w[format]
+        sleep 0.001
+        StrongParameters::Core::Configuration.always_permitted_parameters
       end
     end
 

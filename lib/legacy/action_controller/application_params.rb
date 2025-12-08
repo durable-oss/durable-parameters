@@ -179,20 +179,27 @@ module ActionController
         # Remove denied attributes
         attrs.reject! { |attr| denied_attributes.include?(attr) }
 
-        # Filter by action-specific flags if provided
-        if action
-          action = action.to_sym
-          attrs.select! do |attr|
-            opts = attribute_options(attr)
-            if opts[:only]
-              Array(opts[:only]).include?(action)
-            elsif opts[:except]
-              !Array(opts[:except]).include?(action)
-            else
-              true
+          # Filter by action-specific flags
+          if action
+            action = action.to_sym
+            attrs.select! do |attr|
+              opts = attribute_options(attr)
+              if opts[:only]
+                Array(opts[:only]).include?(action)
+              elsif opts[:except]
+                !Array(opts[:except]).include?(action)
+              else
+                true
+              end
+            end
+          else
+            # When no action is specified, exclude attributes with :only (since they require specific actions)
+            # but include attributes with :except (since they are allowed by default)
+            attrs.select! do |attr|
+              opts = attribute_options(attr)
+              opts[:only].nil?
             end
           end
-        end
 
         # Convert to proper permit format
         # For array attributes, return {attr: []}, otherwise just the symbol

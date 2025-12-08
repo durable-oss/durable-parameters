@@ -57,12 +57,14 @@ module StrongParameters
 
       def find_similar_keys(param, available_keys)
         return [] unless available_keys
+        return [] if param.to_s.empty?
 
         param_str = param.to_s.downcase
         available_keys.select do |key|
           key_str = key.to_s.downcase
+          next if key_str.empty?
           # Simple similarity check: starts with same letter or contains param
-          key_str[0] == param_str[0] || key_str.include?(param_str) || param_str.include?(key_str)
+          key_str[0] == param_str[0] || key_str.include?(param_str)
         end.take(3)
       end
     end
@@ -109,10 +111,17 @@ module StrongParameters
 
         # @return [Proc, nil] notification handler for unpermitted parameters
         attr_accessor :unpermitted_notification_handler
+
+        # @return [Array<String>] parameters that are never considered unpermitted
+        attr_accessor :never_unpermitted_params
       end
+
+      # Initialize default values
+      @never_unpermitted_params = %w[controller action].freeze
 
       # Parameters that are never considered unpermitted.
       # These are added by frameworks and are of no concern for security.
+      # @deprecated Use never_unpermitted_params class accessor instead
       NEVER_UNPERMITTED_PARAMS = %w[controller action].freeze
 
       # Initialize a new Parameters object.
@@ -597,7 +606,8 @@ module StrongParameters
       end
 
       def unpermitted_keys(params)
-        keys - params.keys - NEVER_UNPERMITTED_PARAMS
+        never_unpermitted = self.class.never_unpermitted_params || []
+        keys - params.keys - never_unpermitted
       end
 
       def notify_unpermitted(keys)

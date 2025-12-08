@@ -3,6 +3,7 @@
 require "test_helper"
 
 class DurableParametersTest < Minitest::Test
+  include ActiveSupport::Testing::ConstantStubbing
   def test_top_level_aliases_are_defined
     assert defined?(StrongParameters::Parameters)
     assert defined?(StrongParameters::ApplicationParams)
@@ -79,24 +80,30 @@ class DurableParametersTest < Minitest::Test
     adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "sinatra.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require "durable_parameters/adapters/sinatra"
+    require "durable_parameters/adapters/sinatra"
     assert defined?(StrongParameters::Adapters::Sinatra)
+  ensure
+    StrongParameters::Adapters.send(:remove_const, :Sinatra) if defined?(StrongParameters::Adapters::Sinatra)
   end
 
   def test_hanami_adapter_file_exists_and_loadable
     adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "hanami.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require "durable_parameters/adapters/hanami"
+    require "durable_parameters/adapters/hanami"
     assert defined?(StrongParameters::Adapters::Hanami)
+  ensure
+    StrongParameters::Adapters.send(:remove_const, :Hanami) if defined?(StrongParameters::Adapters::Hanami)
   end
 
   def test_rage_adapter_file_exists_and_loadable
     adapter_path = File.join(__dir__, "..", "lib", "durable_parameters", "adapters", "rage.rb")
     assert File.exist?(adapter_path)
     # Test that it can be required without error
-    assert require "durable_parameters/adapters/rage"
+    require "durable_parameters/adapters/rage"
     assert defined?(StrongParameters::Adapters::Rage)
+  ensure
+    StrongParameters::Adapters.send(:remove_const, :Rage) if defined?(StrongParameters::Adapters::Rage)
   end
 
   def test_version_is_not_empty
@@ -109,5 +116,43 @@ class DurableParametersTest < Minitest::Test
     assert StrongParameters::ApplicationParams.is_a?(Class)
     assert StrongParameters::ParamsRegistry.is_a?(Class)
     assert StrongParameters::ForbiddenAttributesProtection.is_a?(Module)
+  end
+
+  def test_version_matches_durable_parameters_version
+    assert_equal DurableParameters::VERSION, StrongParameters::VERSION
+  end
+
+  def test_core_module_has_all_expected_classes
+    assert defined?(StrongParameters::Core::Parameters)
+    assert defined?(StrongParameters::Core::ApplicationParams)
+    assert defined?(StrongParameters::Core::ParamsRegistry)
+    assert defined?(StrongParameters::Core::ForbiddenAttributesProtection)
+    assert defined?(StrongParameters::Core::Configuration)
+  end
+
+  def test_adapters_module_has_expected_adapters
+    assert defined?(StrongParameters::Adapters::Rails)
+    # Others are not loaded unless their frameworks are defined
+    refute defined?(StrongParameters::Adapters::Sinatra)
+    refute defined?(StrongParameters::Adapters::Hanami)
+    refute defined?(StrongParameters::Adapters::Rage)
+  end
+
+
+
+  def test_aliases_are_properly_typed
+    assert StrongParameters::Parameters.is_a?(Class)
+    assert StrongParameters::ApplicationParams.is_a?(Class)
+    assert StrongParameters::ParamsRegistry.is_a?(Class)
+    assert StrongParameters::ForbiddenAttributesProtection.is_a?(Module)
+  end
+
+
+
+  def test_core_classes_can_be_instantiated
+    # Test that core classes are instantiable
+    params = StrongParameters::Parameters.new({a: 1})
+    assert params.is_a?(StrongParameters::Core::Parameters)
+    assert_equal({"a" => 1}, params.to_h)
   end
 end

@@ -116,7 +116,7 @@ module StrongParameters
 
           # Build a helpful error message
           keys_list = disallowed_keys.map(&:inspect).join(", ")
-          class_name = params_class.name
+          class_name = params_class.name || "AnonymousParamsClass"
 
           raise ArgumentError, <<~ERROR.strip
             Metadata key(s) #{keys_list} not allowed for #{class_name}.

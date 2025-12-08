@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "active_support/descendants_tracker"
+
 module StrongParameters
   module Core
     # Base class for declarative parameter permission definitions.
@@ -45,6 +47,8 @@ module StrongParameters
     #     end
     #   end
     class ApplicationParams
+      extend ActiveSupport::DescendantsTracker
+
       class << self
         # Returns the list of allowed attributes.
         #
@@ -93,6 +97,7 @@ module StrongParameters
         #   allow :tags, array: true              # permits array of scalars
         #   allow :tags, only: :create            # only for create action
         def allow(attribute, options = {})
+          return unless attribute.respond_to?(:to_sym)
           attribute = attribute.to_sym
           allowed_attributes << attribute unless allowed_attributes.include?(attribute)
 
@@ -116,6 +121,7 @@ module StrongParameters
         # DSL method to deny an attribute
         # @param attribute [Symbol, String] the attribute name to deny
         def deny(attribute)
+          return unless attribute.respond_to?(:to_sym)
           attribute = attribute.to_sym
           denied_attributes << attribute unless denied_attributes.include?(attribute)
           # Clear cache since permitted attributes may have changed
@@ -126,6 +132,7 @@ module StrongParameters
         # @param name [Symbol, String] the flag name
         # @param value [Boolean, Object] the flag value
         def flag(name, value = true)
+          return unless name.respond_to?(:to_sym)
           flags[name.to_sym] = value
         end
 
@@ -134,7 +141,7 @@ module StrongParameters
         # Note: :current_user is always allowed and doesn't need to be declared
         def metadata(*keys)
           keys.each do |key|
-            allowed_metadata << key.to_sym
+            allowed_metadata << key.to_sym if key.respond_to?(:to_sym)
           end
         end
 
@@ -155,6 +162,7 @@ module StrongParameters
         #   end
         def transform(attribute, &block)
           raise ArgumentError, "Block required for transform" unless block_given?
+          return unless attribute.respond_to?(:to_sym)
           transformations[attribute.to_sym] = block
         end
 
@@ -270,7 +278,7 @@ module StrongParameters
           return params if transformations.empty?
 
           # Handle non-hash params
-          return params unless params.is_a?(Hash) || params.respond_to?(:to_unsafe_h) || params.respond_to?(:to_h)
+          return params if params.nil? || !(params.is_a?(Hash) || params.respond_to?(:to_unsafe_h) || (params.respond_to?(:to_h) && !params.is_a?(Array)))
 
           # Convert to regular hash - handle both plain hashes and Parameters objects
           hash = if params.respond_to?(:to_unsafe_h)
@@ -286,21 +294,33 @@ module StrongParameters
           # Make a dup so we don't modify the original
           hash = hash.dup
 
-          # Apply each transformation
-          transformations.each do |attribute, transformer|
-            key_str = attribute.to_s
-            if hash.key?(key_str)
-              # Deep dup the value to prevent transformations from modifying the original
-              original_value = hash[key_str]
-              duped_value = begin
-                Marshal.load(Marshal.dump(original_value))
-              rescue TypeError
-                # If Marshal fails (e.g., due to procs or unserializable objects), shallow dup
-                original_value.dup
+            # Apply each transformation
+            transformations.each do |attribute, transformer|
+              key_str = attribute.to_s
+              key_sym = attribute.to_sym
+
+              # Check for string key first
+              if hash.key?(key_str)
+                original_value = hash[key_str]
+                duped_value = begin
+                  Marshal.load(Marshal.dump(original_value))
+                rescue TypeError
+                  original_value.dup rescue original_value
+                end
+                hash[key_str] = transformer.call(duped_value, metadata)
               end
-              hash[key_str] = transformer.call(duped_value, metadata)
+
+              # Check for symbol key (even if string key exists, transform both if present)
+              if hash.key?(key_sym)
+                original_value = hash[key_sym]
+                duped_value = begin
+                  Marshal.load(Marshal.dump(original_value))
+                rescue TypeError
+                  original_value.dup rescue original_value
+                end
+                hash[key_sym] = transformer.call(duped_value, metadata)
+              end
             end
-          end
 
           hash
         end

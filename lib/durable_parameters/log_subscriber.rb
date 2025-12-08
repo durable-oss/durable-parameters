@@ -16,6 +16,8 @@ module StrongParameters
     # @return [void]
     def unpermitted_parameters(event)
       unpermitted_keys = event.payload[:keys]
+      return if unpermitted_keys.nil? || unpermitted_keys.empty?
+
       debug("Unpermitted parameters: #{unpermitted_keys.join(", ")}")
     end
 

@@ -14,11 +14,11 @@ module StrongParameters
       StrongParameters::Adapters::Rails.setup!
     end
 
-    # Configure scaffold generator to use strong_parameters controller template
+    # Configure scaffold generator to use durable_parameters controller template
     if config.respond_to?(:app_generators)
-      config.app_generators.scaffold_controller = :strong_parameters_controller
+      config.app_generators.scaffold_controller = :durable_parameters_controller
     else
-      config.generators.scaffold_controller = :strong_parameters_controller
+      config.generators.scaffold_controller = :durable_parameters_controller
     end
 
     # Configure action on unpermitted parameters (log in dev/test, silent in production)

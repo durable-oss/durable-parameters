@@ -123,7 +123,7 @@ class ParamsRegistryTest < Minitest::Test
 
   def test_normalize_key_with_multiple_capitals
     ActionController::ParamsRegistry.register("HTTPSConnection", @user_params_class)
-    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:h_t_t_p_s_connection)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:https_connection)
   end
 
   def test_normalize_key_with_single_letter
@@ -143,7 +143,7 @@ class ParamsRegistryTest < Minitest::Test
 
   def test_normalize_key_with_numbers
     ActionController::ParamsRegistry.register("User2FA", @user_params_class)
-    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:user2_f_a)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:user2_fa)
   end
 
   def test_register_overwrites_existing_registration
@@ -215,7 +215,7 @@ class ParamsRegistryTest < Minitest::Test
 
   def test_normalize_key_with_acronyms
     ActionController::ParamsRegistry.register("XMLHTTPRequest", @user_params_class)
-    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:x_m_l_h_t_t_p_request)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:xmlhttp_request)
   end
 
   def test_registered_models_returns_all_models
@@ -226,5 +226,156 @@ class ParamsRegistryTest < Minitest::Test
     assert_equal 2, models.length
     assert_includes models, "user"
     assert_includes models, "account"
+  end
+
+  def test_register_with_invalid_model_name
+    # Should handle nil gracefully
+    result = ActionController::ParamsRegistry.register(nil, @user_params_class)
+    assert_equal @user_params_class, result  # register returns the params_class
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(nil)
+  end
+
+  def test_lookup_with_invalid_model_name
+    # Should handle nil gracefully
+    assert_nil ActionController::ParamsRegistry.lookup(nil)
+  end
+
+  def test_registered_with_invalid_model_name
+    # Should handle nil gracefully
+    refute ActionController::ParamsRegistry.registered?(nil)
+  end
+
+  def test_permitted_attributes_for_with_invalid_model_name
+    # Should handle nil gracefully
+    assert_equal [], ActionController::ParamsRegistry.permitted_attributes_for(nil)
+  end
+
+  def test_normalize_key_with_empty_string
+    ActionController::ParamsRegistry.register("", @user_params_class)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup("")
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:"")
+  end
+
+  def test_normalize_key_with_special_characters
+    ActionController::ParamsRegistry.register("User-Profile", @user_params_class)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:user_profile)
+  end
+
+  def test_normalize_key_with_unicode
+    ActionController::ParamsRegistry.register("Usér", @user_params_class)
+    assert_equal @user_params_class, ActionController::ParamsRegistry.lookup(:usér)
+  end
+
+  def test_registry_is_singleton
+    registry1 = ActionController::ParamsRegistry.send(:registry)
+    registry2 = ActionController::ParamsRegistry.send(:registry)
+    assert_same registry1, registry2
+  end
+
+  def test_clear_returns_empty_hash
+    ActionController::ParamsRegistry.register("User", @user_params_class)
+    result = ActionController::ParamsRegistry.clear!
+    assert_empty result
+    assert_same ActionController::ParamsRegistry.send(:registry), result
+  end
+
+  def test_permitted_attributes_for_with_broken_params_class
+    broken_class = Class.new do
+      def self.permitted_attributes(action: nil)
+        raise "Broken"
+      end
+    end
+
+    ActionController::ParamsRegistry.register("Broken", broken_class)
+    assert_raises(RuntimeError) do
+      ActionController::ParamsRegistry.permitted_attributes_for("Broken")
+    end
+  end
+
+  def test_permitted_attributes_for_with_nil_params_class
+    ActionController::ParamsRegistry.register("NilClass", nil)
+    assert_equal [], ActionController::ParamsRegistry.permitted_attributes_for("NilClass")
+  end
+
+  def test_registered_models_returns_sorted_strings
+    ActionController::ParamsRegistry.register("Zebra", @user_params_class)
+    ActionController::ParamsRegistry.register("Apple", @account_params_class)
+
+    models = ActionController::ParamsRegistry.registered_models
+    assert_equal ["apple", "zebra"], models.sort
+  end
+
+  def test_register_with_frozen_strings
+    frozen_name = "FrozenUser".freeze
+    ActionController::ParamsRegistry.register(frozen_name, @user_params_class)
+    assert ActionController::ParamsRegistry.registered?(frozen_name)
+  end
+
+  def test_normalize_key_with_frozen_symbol
+    frozen_symbol = :frozen_user
+    ActionController::ParamsRegistry.register(frozen_symbol, @user_params_class)
+    assert ActionController::ParamsRegistry.registered?(frozen_symbol)
+  end
+
+  def test_large_registry_performance
+    # Test with many registrations
+    100.times do |i|
+      params_class = Class.new(ActionController::ApplicationParams) do
+        define_singleton_method(:name) { "Model#{i}Params" }
+        allow :field
+      end
+      ActionController::ParamsRegistry.register("Model#{i}", params_class)
+    end
+
+    assert_equal 100, ActionController::ParamsRegistry.registered_models.length
+
+    # Lookup should still work
+    assert ActionController::ParamsRegistry.registered?("Model50")
+    refute_nil ActionController::ParamsRegistry.lookup("Model50")
+  end
+
+  def test_register_overwrites_with_different_types
+    first_class = Class.new(ActionController::ApplicationParams)
+    second_class = Class.new(ActionController::ApplicationParams)
+
+    ActionController::ParamsRegistry.register(:user, first_class)
+    assert_equal first_class, ActionController::ParamsRegistry.lookup(:user)
+
+    ActionController::ParamsRegistry.register("user", second_class)
+    assert_equal second_class, ActionController::ParamsRegistry.lookup(:user)
+  end
+
+  def test_permitted_attributes_for_with_action_symbol_and_string
+    test_class = Class.new(ActionController::ApplicationParams) do
+      allow :field1, only: :create
+      allow :field2
+    end
+
+    ActionController::ParamsRegistry.register("Test", test_class)
+
+    # Symbol action
+    attrs = ActionController::ParamsRegistry.permitted_attributes_for("Test", action: :create)
+    assert_includes attrs, :field1
+    assert_includes attrs, :field2
+
+    # String action
+    attrs = ActionController::ParamsRegistry.permitted_attributes_for("Test", action: "create")
+    assert_includes attrs, :field1
+    assert_includes attrs, :field2
+
+    # Update action
+    attrs = ActionController::ParamsRegistry.permitted_attributes_for("Test", action: :update)
+    refute_includes attrs, :field1
+    assert_includes attrs, :field2
+  end
+
+  def test_normalize_key_consistency
+    # Ensure normalize_key is consistent
+    key1 = ActionController::ParamsRegistry.send(:normalize_key, "TestModel")
+    key2 = ActionController::ParamsRegistry.send(:normalize_key, :TestModel)
+    key3 = ActionController::ParamsRegistry.send(:normalize_key, "test_model")
+
+    assert_equal key1, key2
+    assert_equal key1, key3
   end
 end

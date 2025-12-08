@@ -3,7 +3,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   # GET <%= route_url %>
   # GET <%= route_url %>.json
   def index
-    @<%= plural_table_name %> = <%= orm_class.all(class_name) %>
+    @<%= plural_table_name %> = <%= class_name %>.all
 
     respond_to do |format|
       format.html # index.html.erb
@@ -14,7 +14,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   # GET <%= route_url %>/1
   # GET <%= route_url %>/1.json
   def show
-    @<%= singular_table_name %> = <%= orm_class.find(class_name, "params[:id]") %>
+    @<%= singular_table_name %> = <%= class_name %>.find(params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
@@ -25,7 +25,7 @@ class <%= controller_class_name %>Controller < ApplicationController
   # GET <%= route_url %>/new
   # GET <%= route_url %>/new.json
   def new
-    @<%= singular_table_name %> = <%= orm_class.build(class_name) %>
+    @<%= singular_table_name %> = <%= class_name %>.new
 
     respond_to do |format|
       format.html # new.html.erb
@@ -35,21 +35,21 @@ class <%= controller_class_name %>Controller < ApplicationController
 
   # GET <%= route_url %>/1/edit
   def edit
-    @<%= singular_table_name %> = <%= orm_class.find(class_name, "params[:id]") %>
+    @<%= singular_table_name %> = <%= class_name %>.find(params[:id])
   end
 
   # POST <%= route_url %>
   # POST <%= route_url %>.json
   def create
-    @<%= singular_table_name %> = <%= orm_class.build(class_name, "#{singular_table_name}_params") %>
+    @<%= singular_table_name %> = <%= class_name %>.new(<%= "#{singular_table_name}_params" %>)
 
     respond_to do |format|
-      if @<%= orm_instance.save %>
+      if @<%= singular_table_name %>.save
         format.html { redirect_to @<%= singular_table_name %>, notice: <%= "'#{human_name} was successfully created.'" %> }
         format.json { render json: <%= "@#{singular_table_name}" %>, status: :created, location: <%= "@#{singular_table_name}" %> }
       else
         format.html { render action: "new" }
-        format.json { render json: <%= "@#{orm_instance.errors}" %>, status: :unprocessable_entity }
+        format.json { render json: <%= "@#{singular_table_name}.errors" %>, status: :unprocessable_entity }
       end
     end
   end
@@ -57,15 +57,15 @@ class <%= controller_class_name %>Controller < ApplicationController
   # PATCH/PUT <%= route_url %>/1
   # PATCH/PUT <%= route_url %>/1.json
   def update
-    @<%= singular_table_name %> = <%= orm_class.find(class_name, "params[:id]") %>
+    @<%= singular_table_name %> = <%= class_name %>.find(params[:id])
 
     respond_to do |format|
-      if @<%= orm_instance.update("#{singular_table_name}_params") %>
+      if @<%= singular_table_name %>.update(<%= "#{singular_table_name}_params" %>)
         format.html { redirect_to @<%= singular_table_name %>, notice: <%= "'#{human_name} was successfully updated.'" %> }
-        format.json { head :no_content }
+        format.json { render json: <%= "@#{singular_table_name}" %> }
       else
         format.html { render action: "edit" }
-        format.json { render json: <%= "@#{orm_instance.errors}" %>, status: :unprocessable_entity }
+        format.json { render json: <%= "@#{singular_table_name}.errors" %>, status: :unprocessable_entity }
       end
     end
   end
@@ -73,8 +73,8 @@ class <%= controller_class_name %>Controller < ApplicationController
   # DELETE <%= route_url %>/1
   # DELETE <%= route_url %>/1.json
   def destroy
-    @<%= singular_table_name %> = <%= orm_class.find(class_name, "params[:id]") %>
-    @<%= orm_instance.destroy %>
+    @<%= singular_table_name %> = <%= class_name %>.find(params[:id])
+    @<%= singular_table_name %>.destroy
 
     respond_to do |format|
       format.html { redirect_to <%= index_helper %>_url }

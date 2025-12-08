@@ -50,6 +50,9 @@ module StrongParameters
       class Parameters < StrongParameters::Core::Parameters
         # Hanami uses symbol keys by default
 
+        # Ensure class variables are inherited
+        @never_unpermitted_params = StrongParameters::Core::Parameters.never_unpermitted_params
+
         private
 
         def normalize_key(key)
@@ -120,6 +123,7 @@ module StrongParameters
           ENV["HANAMI_ENV"] || ENV["RACK_ENV"] || "development"
         end
 
+        # Only configure logging in development
         if env == "development" || env == :development
           ::StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = :log
           ::StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = lambda do |keys|
@@ -132,6 +136,10 @@ module StrongParameters
 
             logger&.warn("Unpermitted parameters: #{keys.join(", ")}")
           end
+        else
+          # Clear logging in non-development environments
+          ::StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+          ::StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
         end
       end
     end

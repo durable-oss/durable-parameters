@@ -50,16 +50,16 @@ module StrongParameters
       # Error handler for ParameterMissing
       module ErrorHandlers
         def self.registered(app)
-          app.error StrongParameters::Core::ParameterMissing do
-            halt 400, {error: "Required parameter missing: #{env["sinatra.error"].param}"}.to_json
+          app.error StrongParameters::Core::ParameterMissing do |exception|
+            halt 400, {error: "Required parameter missing: #{exception.param}"}.to_json
           end
 
-          app.error StrongParameters::Core::ForbiddenAttributes do
+          app.error StrongParameters::Core::ForbiddenAttributes do |exception|
             halt 400, {error: "Forbidden attributes in mass assignment"}.to_json
           end
 
-          app.error StrongParameters::Core::UnpermittedParameters do
-            halt 400, {error: "Unpermitted parameters: #{env["sinatra.error"].params.join(", ")}"}.to_json
+          app.error StrongParameters::Core::UnpermittedParameters do |exception|
+            halt 400, {error: "Unpermitted parameters: #{exception.params.join(", ")}"}.to_json
           end
         end
       end

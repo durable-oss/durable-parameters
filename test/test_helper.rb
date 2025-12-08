@@ -10,6 +10,7 @@ end
 
 require "minitest/autorun"
 require "rails"
+require "active_support/testing/constant_stubbing"
 
 class FakeApplication < Rails::Application; end
 

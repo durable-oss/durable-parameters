@@ -73,6 +73,7 @@ module StrongParameters
         def apply!
           Parameters.action_on_unpermitted_parameters = action_on_unpermitted_parameters
           Parameters.unpermitted_notification_handler = unpermitted_notification_handler
+          Parameters.never_unpermitted_params = always_permitted_parameters
         end
       end
 
