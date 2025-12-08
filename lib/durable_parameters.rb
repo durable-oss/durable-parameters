@@ -33,6 +33,9 @@ end
 
 # Provide top-level convenience aliases
 module StrongParameters
+  # Gem version
+  VERSION = DurableParameters::VERSION
+
   # Convenience aliases for core classes
   Parameters = Core::Parameters unless defined?(Parameters)
   ApplicationParams = Core::ApplicationParams unless defined?(ApplicationParams)

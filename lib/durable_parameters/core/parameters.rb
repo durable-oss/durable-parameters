@@ -363,7 +363,7 @@ module StrongParameters
       #   params.slice(:name, :email)
       def slice(*keys)
         normalized_keys = keys.map { |k| normalize_key(k) }
-        sliced = slice(*normalized_keys)
+        sliced = super(*normalized_keys)
 
         self.class.new(sliced).tap do |new_instance|
           new_instance.instance_variable_set(:@permitted, @permitted)
