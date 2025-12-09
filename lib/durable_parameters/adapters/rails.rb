@@ -7,7 +7,7 @@ require "action_controller"
 require "action_dispatch/http/upload"
 require "durable_parameters/core"
 
-module StrongParameters
+module DurableParameters
   module Adapters
     # Rails adapter for Strong Parameters
     #
@@ -21,6 +21,8 @@ module StrongParameters
     module Rails
       # Extension module to add Durable Parameters functionality to Rails' ActionController::Parameters
       module ParametersExtension
+        include DurableParameters::Core::MetadataValidation
+
         # Track the required key for automatic params class inference
         attr_accessor :required_key
 
@@ -104,36 +106,10 @@ module StrongParameters
           sliced
         end
 
-        private
-
-        # Validate that all provided metadata keys are allowed by the params class.
-        def validate_metadata_keys!(params_class, metadata_keys)
-          return if metadata_keys.empty?
-
-          disallowed_keys = metadata_keys.reject { |key| params_class.metadata_allowed?(key) }
-
-          return unless disallowed_keys.any?
-
-          # Build a helpful error message
-          keys_list = disallowed_keys.map(&:inspect).join(", ")
-          class_name = params_class.name || "AnonymousParamsClass"
-
-          raise ArgumentError, <<~ERROR.strip
-            Metadata key(s) #{keys_list} not allowed for #{class_name}.
-
-            To fix this, declare them in your params class:
-
-              class #{class_name} < ApplicationParams
-                metadata #{disallowed_keys.map(&:inspect).join(", ")}
-              end
-
-            Note: :current_user is always allowed and doesn't need to be declared.
-          ERROR
-        end
       end
 
       # Rails-specific Parameters implementation (deprecated, kept for compatibility)
-      class Parameters < StrongParameters::Core::Parameters
+      class Parameters < DurableParameters::Core::Parameters
         # Override to use ActiveSupport::HashWithIndifferentAccess behavior
         def initialize(attributes = nil)
           @permitted = false
@@ -183,7 +159,7 @@ module StrongParameters
 
         # Rails-specific permitted scalar types
         PERMITTED_SCALAR_TYPES = (
-          StrongParameters::Core::Parameters::PERMITTED_SCALAR_TYPES + [
+          DurableParameters::Core::Parameters::PERMITTED_SCALAR_TYPES + [
             ActionDispatch::Http::UploadedFile,
             Rack::Test::UploadedFile
           ]
@@ -196,14 +172,14 @@ module StrongParameters
 
       # Map core exceptions to ActionController namespace for compatibility
       module ActionController
-        ParameterMissing = StrongParameters::Core::ParameterMissing
-        UnpermittedParameters = StrongParameters::Core::UnpermittedParameters
+        ParameterMissing = DurableParameters::Core::ParameterMissing
+        UnpermittedParameters = DurableParameters::Core::UnpermittedParameters
 
-        # Controller integration module for Strong Parameters in Rails.
+        # Controller integration module for Durable Parameters in Rails.
         #
         # This module provides the params method to controllers and handles
         # ParameterMissing exceptions with a 400 Bad Request response.
-        module StrongParameters
+        module DurableParameters
           extend ActiveSupport::Concern
 
           included do
@@ -217,7 +193,7 @@ module StrongParameters
           #
           # @return [Parameters] the request parameters wrapped in a Parameters object
           def params
-            @_params ||= ::StrongParameters::Adapters::Rails::Parameters.new(request.parameters)
+            @_params ||= ::DurableParameters::Adapters::Rails::Parameters.new(request.parameters)
           end
 
           # Set the parameters for this request.
@@ -225,14 +201,14 @@ module StrongParameters
           # @param val [Hash, Parameters] the parameters to set
           # @return [Parameters] the parameters
           def params=(val)
-            @_params = val.is_a?(Hash) ? ::StrongParameters::Adapters::Rails::Parameters.new(val) : val
+            @_params = val.is_a?(Hash) ? ::DurableParameters::Adapters::Rails::Parameters.new(val) : val
           end
         end
       end
 
       # ActiveModel integration
       module ActiveModel
-        ForbiddenAttributes = StrongParameters::Core::ForbiddenAttributes
+        ForbiddenAttributes = DurableParameters::Core::ForbiddenAttributes
 
         # Protection module for Active Model mass assignment.
         module ForbiddenAttributesProtection
@@ -246,7 +222,7 @@ module StrongParameters
             if !new_attributes.respond_to?(:permitted?) || new_attributes.permitted?
               super
             else
-              raise ::StrongParameters::Core::ForbiddenAttributes
+              raise ::DurableParameters::Core::ForbiddenAttributes
             end
           end
         end
@@ -257,26 +233,26 @@ module StrongParameters
         # Extend the existing Rails ActionController::Parameters with our functionality
         # Use prepend so our methods override existing ones
         ::ActionController::Parameters.class_eval do
-          prepend StrongParameters::Adapters::Rails::ParametersExtension
+          prepend DurableParameters::Adapters::Rails::ParametersExtension
         end
 
         # Add our new classes to ActionController namespace
-        ::ActionController.const_set(:ApplicationParams, ::StrongParameters::Core::ApplicationParams) unless ::ActionController.const_defined?(:ApplicationParams)
-        ::ActionController.const_set(:ParamsRegistry, ::StrongParameters::Core::ParamsRegistry) unless ::ActionController.const_defined?(:ParamsRegistry)
+        ::ActionController.const_set(:ApplicationParams, ::DurableParameters::Core::ApplicationParams) unless ::ActionController.const_defined?(:ApplicationParams)
+        ::ActionController.const_set(:ParamsRegistry, ::DurableParameters::Core::ParamsRegistry) unless ::ActionController.const_defined?(:ParamsRegistry)
 
         # Integrate with ActionController
         ActiveSupport.on_load(:action_controller) do
-          include ::StrongParameters::Adapters::Rails::ActionController::StrongParameters
+          include ::DurableParameters::Adapters::Rails::ActionController::DurableParameters
         end
 
         # Inject into ActiveModel using const_set (Ruby 3.5 compatible) - only if ActiveModel is loaded
         # Only set if not already defined to allow legacy versions to take precedence
         if defined?(::ActiveModel)
           unless ::ActiveModel.const_defined?(:ForbiddenAttributes)
-            ::ActiveModel.const_set(:ForbiddenAttributes, ::StrongParameters::Core::ForbiddenAttributes)
+            ::ActiveModel.const_set(:ForbiddenAttributes, ::DurableParameters::Core::ForbiddenAttributes)
           end
           unless ::ActiveModel.const_defined?(:ForbiddenAttributesProtection)
-            ::ActiveModel.const_set(:ForbiddenAttributesProtection, ::StrongParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection)
+            ::ActiveModel.const_set(:ForbiddenAttributesProtection, ::DurableParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection)
           end
         end
       end

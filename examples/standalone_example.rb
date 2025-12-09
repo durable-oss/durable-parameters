@@ -1,14 +1,14 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example of using Strong Parameters without any web framework
+# Example of using Durable Parameters without any web framework
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-require "strong_parameters/core"
+require "durable_parameters/core"
 
 # Define a params class for users
-class UserParams < StrongParameters::Core::ApplicationParams
+class UserParams < DurableParameters::Core::ApplicationParams
   allow :name
   allow :email
   allow :bio
@@ -17,7 +17,7 @@ class UserParams < StrongParameters::Core::ApplicationParams
 end
 
 # Register the params class
-StrongParameters::Core::ParamsRegistry.register(:user, UserParams)
+DurableParameters::Core::ParamsRegistry.register(:user, UserParams)
 
 # Example 1: Basic usage with require and permit
 puts "=" * 80
@@ -34,7 +34,7 @@ raw_params = {
   }
 }
 
-params = StrongParameters::Core::Parameters.new(raw_params)
+params = DurableParameters::Core::Parameters.new(raw_params)
 user_params = params.require("user").permit(:name, :email, :bio)
 
 puts "Raw params: #{raw_params.inspect}"
@@ -47,7 +47,7 @@ puts "=" * 80
 puts "Example 2: Using transform_params with params class"
 puts "=" * 80
 
-params2 = StrongParameters::Core::Parameters.new(raw_params)
+params2 = DurableParameters::Core::Parameters.new(raw_params)
 user_params2 = params2.require("user").transform_params
 
 puts "Raw params: #{raw_params.inspect}"
@@ -72,7 +72,7 @@ nested_params = {
   }
 }
 
-params3 = StrongParameters::Core::Parameters.new(nested_params)
+params3 = DurableParameters::Core::Parameters.new(nested_params)
 user_params3 = params3.require("user").permit(:name, :email, address: [:street, :city])
 
 puts "Raw params: #{nested_params.inspect}"
@@ -92,7 +92,7 @@ array_params = {
   }
 }
 
-params4 = StrongParameters::Core::Parameters.new(array_params)
+params4 = DurableParameters::Core::Parameters.new(array_params)
 user_params4 = params4.require("user").permit(:name, :email, tags: [])
 
 puts "Raw params: #{array_params.inspect}"
@@ -105,9 +105,9 @@ puts "Example 5: Error handling - ParameterMissing"
 puts "=" * 80
 
 begin
-  params5 = StrongParameters::Core::Parameters.new({})
+  params5 = DurableParameters::Core::Parameters.new({})
   params5.require("user")
-rescue StrongParameters::Core::ParameterMissing => e
+rescue DurableParameters::Core::ParameterMissing => e
   puts "Caught ParameterMissing exception: #{e.message}"
   puts "Missing param: #{e.param}"
 end
@@ -119,7 +119,7 @@ puts "Example 6: ForbiddenAttributes protection"
 puts "=" * 80
 
 class SimpleModel
-  include StrongParameters::Core::ForbiddenAttributesProtection
+  include DurableParameters::Core::ForbiddenAttributesProtection
 
   attr_accessor :name, :email
 
@@ -141,9 +141,9 @@ puts "Model created with permitted params: name=#{model1.name}, email=#{model1.e
 
 # This will raise ForbiddenAttributes - params are not permitted
 begin
-  unpermitted_params = StrongParameters::Core::Parameters.new(raw_params["user"])
+  unpermitted_params = DurableParameters::Core::Parameters.new(raw_params["user"])
   SimpleModel.new(unpermitted_params)
-rescue StrongParameters::Core::ForbiddenAttributes => e
+rescue DurableParameters::Core::ForbiddenAttributes => e
   puts "Caught ForbiddenAttributes exception: #{e.message}"
 end
 puts

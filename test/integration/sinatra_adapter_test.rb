@@ -10,13 +10,13 @@ class SinatraAdapterTest < Minitest::Test
 
   # Test Sinatra::Parameters class
   def test_sinatra_parameters_class_inherits_from_core_parameters
-    params = StrongParameters::Adapters::Sinatra::Parameters.new({})
-    assert_instance_of StrongParameters::Adapters::Sinatra::Parameters, params
-    assert_kind_of StrongParameters::Core::Parameters, params
+    params = DurableParameters::Adapters::Sinatra::Parameters.new({})
+    assert_instance_of DurableParameters::Adapters::Sinatra::Parameters, params
+    assert_kind_of DurableParameters::Core::Parameters, params
   end
 
   def test_sinatra_parameters_normalize_key_converts_to_string
-    params_class = StrongParameters::Adapters::Sinatra::Parameters
+    params_class = DurableParameters::Adapters::Sinatra::Parameters
     instance = params_class.new({})
 
     # Test with symbol
@@ -29,7 +29,7 @@ class SinatraAdapterTest < Minitest::Test
 
   def test_sinatra_parameters_handles_mixed_key_types
     input_params = {"name" => "John", :email => "john@example.com", 123 => "value"}
-    params = StrongParameters::Adapters::Sinatra::Parameters.new(input_params)
+    params = DurableParameters::Adapters::Sinatra::Parameters.new(input_params)
 
     # Sinatra typically uses string keys, so all should be accessible as strings
     assert_equal "John", params["name"]
@@ -41,7 +41,7 @@ class SinatraAdapterTest < Minitest::Test
   def test_helpers_module_provides_strong_params_method
     # Create a mock Sinatra app class that includes the helpers
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -53,14 +53,14 @@ class SinatraAdapterTest < Minitest::Test
     app = mock_app.new
     strong_params = app.strong_params
 
-    assert_instance_of StrongParameters::Adapters::Sinatra::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Sinatra::Parameters, strong_params
     assert_equal "John", strong_params["user"]["name"]
     assert_equal "john@example.com", strong_params["user"]["email"]
   end
 
   def test_helpers_module_caches_strong_params
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -78,7 +78,7 @@ class SinatraAdapterTest < Minitest::Test
 
   def test_helpers_module_provides_sp_alias
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -106,12 +106,12 @@ class SinatraAdapterTest < Minitest::Test
     end
 
     # Register error handlers
-    StrongParameters::Adapters::Sinatra::ErrorHandlers.registered(mock_app)
+    DurableParameters::Adapters::Sinatra::ErrorHandlers.registered(mock_app)
 
     handlers = mock_app.registered_handlers
-    assert handlers.key?(StrongParameters::Core::ParameterMissing)
-    assert handlers.key?(StrongParameters::Core::ForbiddenAttributes)
-    assert handlers.key?(StrongParameters::Core::UnpermittedParameters)
+    assert handlers.key?(DurableParameters::Core::ParameterMissing)
+    assert handlers.key?(DurableParameters::Core::ForbiddenAttributes)
+    assert handlers.key?(DurableParameters::Core::UnpermittedParameters)
   end
 
 
@@ -146,10 +146,10 @@ class SinatraAdapterTest < Minitest::Test
       end
     end
 
-    StrongParameters::Adapters::Sinatra.registered(mock_app)
+    DurableParameters::Adapters::Sinatra.registered(mock_app)
 
-    assert_includes mock_app.helpers_registered, StrongParameters::Adapters::Sinatra::Helpers
-    assert_includes mock_app.modules_registered, StrongParameters::Adapters::Sinatra::ErrorHandlers
+    assert_includes mock_app.helpers_registered, DurableParameters::Adapters::Sinatra::Helpers
+    assert_includes mock_app.modules_registered, DurableParameters::Adapters::Sinatra::ErrorHandlers
   end
 
   def test_sinatra_module_registered_configures_logging_in_development
@@ -160,10 +160,10 @@ class SinatraAdapterTest < Minitest::Test
       def self.logger; @logger ||= StringIO.new; end
     end
 
-    StrongParameters::Adapters::Sinatra.registered(mock_app)
+    DurableParameters::Adapters::Sinatra.registered(mock_app)
 
     # Check that logging is configured
-    params_class = StrongParameters::Adapters::Sinatra::Parameters
+    params_class = DurableParameters::Adapters::Sinatra::Parameters
     assert_equal :log, params_class.action_on_unpermitted_parameters
     assert params_class.unpermitted_notification_handler.is_a?(Proc)
   end
@@ -173,7 +173,7 @@ class SinatraAdapterTest < Minitest::Test
       def self.register(*args); end
     end
 
-    StrongParameters::Adapters::Sinatra.included(mock_base)
+    DurableParameters::Adapters::Sinatra.included(mock_base)
     # Should call register if base responds to it
   end
 
@@ -181,7 +181,7 @@ class SinatraAdapterTest < Minitest::Test
   def test_sinatra_adapter_integration_basic_usage
     # Mock a Sinatra app with the adapter
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -204,7 +204,7 @@ class SinatraAdapterTest < Minitest::Test
 
   def test_sinatra_adapter_integration_with_nested_params
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -238,7 +238,7 @@ class SinatraAdapterTest < Minitest::Test
 
   def test_sinatra_adapter_integration_error_handling
     mock_app = Class.new do
-      include StrongParameters::Adapters::Sinatra::Helpers
+      include DurableParameters::Adapters::Sinatra::Helpers
 
       attr_accessor :params
 
@@ -253,28 +253,28 @@ class SinatraAdapterTest < Minitest::Test
 
     app = mock_app.new({"user" => {"name" => "John"}})
 
-    assert_raises StrongParameters::Core::ParameterMissing do
+    assert_raises DurableParameters::Core::ParameterMissing do
       app.process_request
     end
   end
 
   # Test adapter loading
   def test_sinatra_adapter_is_module
-    assert StrongParameters::Adapters::Sinatra.is_a?(Module)
+    assert DurableParameters::Adapters::Sinatra.is_a?(Module)
   end
 
   def test_sinatra_adapter_has_parameters_class
-    assert defined?(StrongParameters::Adapters::Sinatra::Parameters)
-    assert StrongParameters::Adapters::Sinatra::Parameters.is_a?(Class)
+    assert defined?(DurableParameters::Adapters::Sinatra::Parameters)
+    assert DurableParameters::Adapters::Sinatra::Parameters.is_a?(Class)
   end
 
   def test_sinatra_adapter_has_helpers_module
-    assert defined?(StrongParameters::Adapters::Sinatra::Helpers)
-    assert StrongParameters::Adapters::Sinatra::Helpers.is_a?(Module)
+    assert defined?(DurableParameters::Adapters::Sinatra::Helpers)
+    assert DurableParameters::Adapters::Sinatra::Helpers.is_a?(Module)
   end
 
   def test_sinatra_adapter_has_error_handlers_module
-    assert defined?(StrongParameters::Adapters::Sinatra::ErrorHandlers)
-    assert StrongParameters::Adapters::Sinatra::ErrorHandlers.is_a?(Module)
+    assert defined?(DurableParameters::Adapters::Sinatra::ErrorHandlers)
+    assert DurableParameters::Adapters::Sinatra::ErrorHandlers.is_a?(Module)
   end
 end

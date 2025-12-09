@@ -15,11 +15,11 @@ class RailtieTest < Minitest::Test
   end
 
   def test_railtie_is_defined
-    assert defined?(StrongParameters::Railtie)
+    assert defined?(DurableParameters::Railtie)
   end
 
   def test_railtie_inherits_from_rails_railtie
-    assert StrongParameters::Railtie < ::Rails::Railtie
+    assert DurableParameters::Railtie < ::Rails::Railtie
   end
 
 
@@ -27,8 +27,8 @@ class RailtieTest < Minitest::Test
   def test_railtie_has_before_initialize_configuration
     # Test that the railtie configures before_initialize
     # We can check this by verifying the railtie class has the expected structure
-    assert StrongParameters::Railtie.is_a?(Class)
-    assert StrongParameters::Railtie < ::Rails::Railtie
+    assert DurableParameters::Railtie.is_a?(Class)
+    assert DurableParameters::Railtie < ::Rails::Railtie
   end
 
   def test_generator_config_for_newer_rails
@@ -74,12 +74,12 @@ class RailtieTest < Minitest::Test
       app.config.action_controller = ActiveSupport::OrderedOptions.new
 
       # Simulate the initializer logic - delete returns the block result when key doesn't exist
-      StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
+      DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
         end
 
-      assert_equal :log, StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
+      assert_equal :log, DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
     end
   end
 
@@ -89,12 +89,12 @@ class RailtieTest < Minitest::Test
       app.config.action_controller = ActiveSupport::OrderedOptions.new
 
       # Simulate the initializer logic
-      StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
+      DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
         end
 
-      assert_equal :log, StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
+      assert_equal :log, DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
     end
   end
 
@@ -104,12 +104,12 @@ class RailtieTest < Minitest::Test
       app.config.action_controller = ActiveSupport::OrderedOptions.new
 
       # Simulate the initializer logic
-      StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
+      DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
         end
 
-      assert_equal false, StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
+      assert_equal false, DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
     end
   end
 
@@ -119,12 +119,12 @@ class RailtieTest < Minitest::Test
       app.config.action_controller = ActiveSupport::OrderedOptions.new
 
       # Simulate the initializer logic
-      StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
+      DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
         end
 
-      assert_equal :log, StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
+      assert_equal :log, DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters
     end
   end
 
@@ -171,14 +171,14 @@ class RailtieTest < Minitest::Test
   def test_railtie_has_after_initialize_configuration
     # Test that the railtie configures after_initialize
     # We can check this by verifying the railtie class has the expected structure
-    assert StrongParameters::Railtie.is_a?(Class)
-    assert StrongParameters::Railtie < ::Rails::Railtie
+    assert DurableParameters::Railtie.is_a?(Class)
+    assert DurableParameters::Railtie < ::Rails::Railtie
   end
 
   def test_application_params_has_descendants_method
     # Test that ApplicationParams has the descendants method after our fix
-    assert StrongParameters::Core::ApplicationParams.respond_to?(:descendants)
-    assert StrongParameters::Core::ApplicationParams.descendants.is_a?(Array)
+    assert DurableParameters::Core::ApplicationParams.respond_to?(:descendants)
+    assert DurableParameters::Core::ApplicationParams.descendants.is_a?(Array)
   end
 
   private

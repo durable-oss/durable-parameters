@@ -10,13 +10,13 @@ class RageAdapterTest < Minitest::Test
 
   # Test Rage::Parameters class
   def test_rage_parameters_class_inherits_from_core_parameters
-    params = StrongParameters::Adapters::Rage::Parameters.new({})
-    assert_instance_of StrongParameters::Adapters::Rage::Parameters, params
-    assert_kind_of StrongParameters::Core::Parameters, params
+    params = DurableParameters::Adapters::Rage::Parameters.new({})
+    assert_instance_of DurableParameters::Adapters::Rage::Parameters, params
+    assert_kind_of DurableParameters::Core::Parameters, params
   end
 
   def test_rage_parameters_normalize_key_converts_to_string
-    params_class = StrongParameters::Adapters::Rage::Parameters
+    params_class = DurableParameters::Adapters::Rage::Parameters
     instance = params_class.new({})
 
     # Test with symbol
@@ -31,7 +31,7 @@ class RageAdapterTest < Minitest::Test
 
   def test_rage_parameters_handles_mixed_key_types
     input_params = {"name" => "John", :email => "john@example.com", 123 => "value", nil => "nil_key"}
-    params = StrongParameters::Adapters::Rage::Parameters.new(input_params)
+    params = DurableParameters::Adapters::Rage::Parameters.new(input_params)
 
     # Rage uses string keys like Rails
     assert_equal "John", params["name"]
@@ -41,7 +41,7 @@ class RageAdapterTest < Minitest::Test
   end
 
   def test_rage_parameters_permits_basic_functionality
-    params = StrongParameters::Adapters::Rage::Parameters.new(
+    params = DurableParameters::Adapters::Rage::Parameters.new(
       "user" => {"name" => "John", "email" => "john@example.com", "admin" => true}
     )
 
@@ -54,7 +54,7 @@ class RageAdapterTest < Minitest::Test
   end
 
   def test_rage_parameters_permits_nested_attributes
-    params = StrongParameters::Adapters::Rage::Parameters.new(
+    params = DurableParameters::Adapters::Rage::Parameters.new(
       "user" => {
         "name" => "John",
         "profile" => {"bio" => "Developer", "age" => 30},
@@ -84,7 +84,7 @@ class RageAdapterTest < Minitest::Test
         @raw_params
       end
 
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       # Mock render method for error handling
       def render(options)
@@ -99,7 +99,7 @@ class RageAdapterTest < Minitest::Test
     controller = mock_controller.new({"user" => {"name" => "John", "email" => "john@example.com"}})
     strong_params = controller.params
 
-    assert_instance_of StrongParameters::Adapters::Rage::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Rage::Parameters, strong_params
     assert_equal "John", strong_params["user"]["name"]
     assert_equal "john@example.com", strong_params["user"]["email"]
   end
@@ -114,7 +114,7 @@ class RageAdapterTest < Minitest::Test
         @raw_params
       end
 
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
     end
 
     controller = mock_controller.new({"user" => {"name" => "John"}})
@@ -126,7 +126,7 @@ class RageAdapterTest < Minitest::Test
 
   def test_controller_module_params_assignment
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
     end
 
     controller = mock_controller.new
@@ -134,13 +134,13 @@ class RageAdapterTest < Minitest::Test
 
     controller.params = new_params
 
-    assert_instance_of StrongParameters::Adapters::Rage::Parameters, controller.params
+    assert_instance_of DurableParameters::Adapters::Rage::Parameters, controller.params
     assert_equal "Jane", controller.params["user"]["name"]
   end
 
   def test_controller_module_params_assignment_with_hash
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
     end
 
     controller = mock_controller.new
@@ -148,17 +148,17 @@ class RageAdapterTest < Minitest::Test
 
     controller.params = hash_params
 
-    assert_instance_of StrongParameters::Adapters::Rage::Parameters, controller.params
+    assert_instance_of DurableParameters::Adapters::Rage::Parameters, controller.params
     assert_equal "Jane", controller.params["user"]["name"]
   end
 
   def test_controller_module_params_assignment_with_parameters_object
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
     end
 
     controller = mock_controller.new
-    params_object = StrongParameters::Adapters::Rage::Parameters.new({"user" => {"name" => "Jane"}})
+    params_object = DurableParameters::Adapters::Rage::Parameters.new({"user" => {"name" => "Jane"}})
 
     controller.params = params_object
 
@@ -167,7 +167,7 @@ class RageAdapterTest < Minitest::Test
 
   def test_controller_module_handle_parameter_missing
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def render(options)
         @rendered = options
@@ -179,7 +179,7 @@ class RageAdapterTest < Minitest::Test
     end
 
     controller = mock_controller.new
-    exception = StrongParameters::Core::ParameterMissing.new("user")
+    exception = DurableParameters::Core::ParameterMissing.new("user")
 
     controller.handle_parameter_missing(exception)
 
@@ -192,7 +192,7 @@ class RageAdapterTest < Minitest::Test
 
   def test_controller_module_handle_forbidden_attributes
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def render(options)
         @rendered = options
@@ -204,7 +204,7 @@ class RageAdapterTest < Minitest::Test
     end
 
     controller = mock_controller.new
-    exception = StrongParameters::Core::ForbiddenAttributes.new
+    exception = DurableParameters::Core::ForbiddenAttributes.new
 
     controller.handle_forbidden_attributes(exception)
 
@@ -217,7 +217,7 @@ class RageAdapterTest < Minitest::Test
 
   def test_controller_module_handle_unpermitted_parameters
     mock_controller = Class.new do
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def render(options)
         @rendered = options
@@ -229,7 +229,7 @@ class RageAdapterTest < Minitest::Test
     end
 
     controller = mock_controller.new
-    exception = StrongParameters::Core::UnpermittedParameters.new(["admin", "password"])
+    exception = DurableParameters::Core::UnpermittedParameters.new(["admin", "password"])
 
     controller.handle_unpermitted_parameters(exception)
 
@@ -252,16 +252,16 @@ class RageAdapterTest < Minitest::Test
       end
     end
 
-    mock_controller.prepend(StrongParameters::Adapters::Rage::Controller)
+    mock_controller.prepend(DurableParameters::Adapters::Rage::Controller)
 
     calls = mock_controller.registered_handlers
     assert_equal 3, calls.length
 
     exceptions_and_handlers = calls.map { |call| [call[0], call[1][:with]] }
 
-    assert_includes exceptions_and_handlers, [StrongParameters::Core::ParameterMissing, :handle_parameter_missing]
-    assert_includes exceptions_and_handlers, [StrongParameters::Core::ForbiddenAttributes, :handle_forbidden_attributes]
-    assert_includes exceptions_and_handlers, [StrongParameters::Core::UnpermittedParameters, :handle_unpermitted_parameters]
+    assert_includes exceptions_and_handlers, [DurableParameters::Core::ParameterMissing, :handle_parameter_missing]
+    assert_includes exceptions_and_handlers, [DurableParameters::Core::ForbiddenAttributes, :handle_forbidden_attributes]
+    assert_includes exceptions_and_handlers, [DurableParameters::Core::UnpermittedParameters, :handle_unpermitted_parameters]
   end
 
   # Test Rage module setup
@@ -282,9 +282,9 @@ class RageAdapterTest < Minitest::Test
     Object.const_set(:Rage, mock_rage)
 
     begin
-      StrongParameters::Adapters::Rage.setup!
+      DurableParameters::Adapters::Rage.setup!
 
-      params_class = StrongParameters::Adapters::Rage::Parameters
+      params_class = DurableParameters::Adapters::Rage::Parameters
       assert_nil params_class.action_on_unpermitted_parameters
     ensure
       if original_rage
@@ -313,9 +313,9 @@ class RageAdapterTest < Minitest::Test
     Object.const_set(:Rage, mock_rage)
 
     begin
-      StrongParameters::Adapters::Rage.setup!
+      DurableParameters::Adapters::Rage.setup!
 
-      params_class = StrongParameters::Adapters::Rage::Parameters
+      params_class = DurableParameters::Adapters::Rage::Parameters
       assert_equal :log, params_class.action_on_unpermitted_parameters
       assert params_class.unpermitted_notification_handler.is_a?(Proc)
     ensure
@@ -344,9 +344,9 @@ class RageAdapterTest < Minitest::Test
     Object.const_set(:Rage, mock_rage)
 
     begin
-      StrongParameters::Adapters::Rage.setup!
+      DurableParameters::Adapters::Rage.setup!
 
-      params_class = StrongParameters::Adapters::Rage::Parameters
+      params_class = DurableParameters::Adapters::Rage::Parameters
       assert_equal :log, params_class.action_on_unpermitted_parameters
       assert params_class.unpermitted_notification_handler.is_a?(Proc)
     ensure
@@ -377,9 +377,9 @@ class RageAdapterTest < Minitest::Test
     Object.const_set(:Rage, mock_rage)
 
     begin
-      StrongParameters::Adapters::Rage.setup!
+      DurableParameters::Adapters::Rage.setup!
 
-      params_class = StrongParameters::Adapters::Rage::Parameters
+      params_class = DurableParameters::Adapters::Rage::Parameters
       assert_equal :log, params_class.action_on_unpermitted_parameters
     ensure
       if original_rage_const
@@ -398,11 +398,11 @@ class RageAdapterTest < Minitest::Test
     ENV["RAGE_ENV"] = "production"
 
     # Reset the class variable
-    StrongParameters::Adapters::Rage::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Rage::Parameters.action_on_unpermitted_parameters = nil
 
-    StrongParameters::Adapters::Rage.setup!
+    DurableParameters::Adapters::Rage.setup!
 
-    params_class = StrongParameters::Adapters::Rage::Parameters
+    params_class = DurableParameters::Adapters::Rage::Parameters
     assert_nil params_class.action_on_unpermitted_parameters
   ensure
     ENV["RAGE_ENV"] = original_env
@@ -424,9 +424,9 @@ class RageAdapterTest < Minitest::Test
     Object.const_set(:Rage, mock_rage)
 
     begin
-      StrongParameters::Adapters::Rage.setup!
+      DurableParameters::Adapters::Rage.setup!
 
-      handler = StrongParameters::Adapters::Rage::Parameters.unpermitted_notification_handler
+      handler = DurableParameters::Adapters::Rage::Parameters.unpermitted_notification_handler
       handler.call(["admin"])
 
       assert_includes mock_logger.string, "Unpermitted parameters: admin"
@@ -448,9 +448,9 @@ class RageAdapterTest < Minitest::Test
   def test_rage_module_included_method
     mock_base = Class.new
 
-    StrongParameters::Adapters::Rage.included(mock_base)
+    DurableParameters::Adapters::Rage.included(mock_base)
 
-    assert mock_base.include?(StrongParameters::Adapters::Rage::Controller)
+    assert mock_base.include?(DurableParameters::Adapters::Rage::Controller)
   end
 
   # Test integration scenarios
@@ -466,7 +466,7 @@ class RageAdapterTest < Minitest::Test
         @raw_params
       end
 
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def create
         user_params = self.params.require("user").permit("name", "email")
@@ -491,7 +491,7 @@ class RageAdapterTest < Minitest::Test
         @raw_params
       end
 
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def create
         user_params = self.params.require("user").permit("name", "profile" => ["bio", "age"])
@@ -527,7 +527,7 @@ class RageAdapterTest < Minitest::Test
         @raw_params
       end
 
-      prepend StrongParameters::Adapters::Rage::Controller
+      prepend DurableParameters::Adapters::Rage::Controller
 
       def render(options)
         @rendered = options
@@ -546,24 +546,24 @@ class RageAdapterTest < Minitest::Test
 
     # Since rescue_from is set up, this should trigger error handling
     # In a real scenario, this would be handled by the framework
-    assert_raises StrongParameters::Core::ParameterMissing do
+    assert_raises DurableParameters::Core::ParameterMissing do
       controller.create
     end
   end
 
   # Test adapter loading
   def test_rage_adapter_is_module
-    assert StrongParameters::Adapters::Rage.is_a?(Module)
+    assert DurableParameters::Adapters::Rage.is_a?(Module)
   end
 
   def test_rage_adapter_has_parameters_class
-    assert defined?(StrongParameters::Adapters::Rage::Parameters)
-    assert StrongParameters::Adapters::Rage::Parameters.is_a?(Class)
+    assert defined?(DurableParameters::Adapters::Rage::Parameters)
+    assert DurableParameters::Adapters::Rage::Parameters.is_a?(Class)
   end
 
   def test_rage_adapter_has_controller_module
-    assert defined?(StrongParameters::Adapters::Rage::Controller)
-    assert StrongParameters::Adapters::Rage::Controller.is_a?(Module)
+    assert defined?(DurableParameters::Adapters::Rage::Controller)
+    assert DurableParameters::Adapters::Rage::Controller.is_a?(Module)
   end
 
 

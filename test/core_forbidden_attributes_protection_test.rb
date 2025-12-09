@@ -9,20 +9,20 @@ class MockBase
 end
 
 class TestModel < MockBase
-  include StrongParameters::Core::ForbiddenAttributesProtection
+  include DurableParameters::Core::ForbiddenAttributesProtection
 
   public :sanitize_for_mass_assignment
 end
 
 class CoreForbiddenAttributesProtectionTest < Minitest::Test
   def test_forbidden_attributes_cannot_be_used_for_mass_updating
-    assert_raises(StrongParameters::Core::ForbiddenAttributes) do
-      TestModel.new.sanitize_for_mass_assignment(StrongParameters::Core::Parameters.new(a: "b"))
+    assert_raises(DurableParameters::Core::ForbiddenAttributes) do
+      TestModel.new.sanitize_for_mass_assignment(DurableParameters::Core::Parameters.new(a: "b"))
     end
   end
 
   def test_permitted_attributes_can_be_used_for_mass_updating
-    result = TestModel.new.sanitize_for_mass_assignment(StrongParameters::Core::Parameters.new(a: "b").permit(:a))
+    result = TestModel.new.sanitize_for_mass_assignment(DurableParameters::Core::Parameters.new(a: "b").permit(:a))
     assert_equal({"a" => "b"}, result.to_h)
   end
 
@@ -41,7 +41,7 @@ class CoreForbiddenAttributesProtectionTest < Minitest::Test
   end
 
   def test_forbidden_attributes_exception_is_standard_error
-    assert StrongParameters::Core::ForbiddenAttributes < StandardError
+    assert DurableParameters::Core::ForbiddenAttributes < StandardError
   end
 
   def test_nil_attributes_are_allowed
@@ -50,61 +50,61 @@ class CoreForbiddenAttributesProtectionTest < Minitest::Test
   end
 
   def test_empty_parameters_raise_exception
-    assert_raises(StrongParameters::Core::ForbiddenAttributes) do
-      TestModel.new.sanitize_for_mass_assignment(StrongParameters::Core::Parameters.new)
+    assert_raises(DurableParameters::Core::ForbiddenAttributes) do
+      TestModel.new.sanitize_for_mass_assignment(DurableParameters::Core::Parameters.new)
     end
   end
 
   def test_permitted_empty_parameters_are_allowed
-    result = TestModel.new.sanitize_for_mass_assignment(StrongParameters::Core::Parameters.new.permit!)
+    result = TestModel.new.sanitize_for_mass_assignment(DurableParameters::Core::Parameters.new.permit!)
     assert_equal({}, result.to_h)
   end
 
   def test_nested_unpermitted_parameters_raise_exception
-    nested_params = StrongParameters::Core::Parameters.new(user: {name: "John", password: "secret"})
-    assert_raises(StrongParameters::Core::ForbiddenAttributes) do
+    nested_params = DurableParameters::Core::Parameters.new(user: {name: "John", password: "secret"})
+    assert_raises(DurableParameters::Core::ForbiddenAttributes) do
       TestModel.new.sanitize_for_mass_assignment(nested_params)
     end
   end
 
   def test_nested_permitted_parameters_are_allowed
-    nested_params = StrongParameters::Core::Parameters.new(user: {name: "John", password: "secret"}).permit(user: [:name])
+    nested_params = DurableParameters::Core::Parameters.new(user: {name: "John", password: "secret"}).permit(user: [:name])
     result = TestModel.new.sanitize_for_mass_assignment(nested_params)
     expected = {"user" => {"name" => "John"}}
     assert_equal expected, result.to_h
   end
 
   def test_exception_message_is_class_name
-    error = assert_raises(StrongParameters::Core::ForbiddenAttributes) do
-      TestModel.new.sanitize_for_mass_assignment(StrongParameters::Core::Parameters.new(a: "b"))
+    error = assert_raises(DurableParameters::Core::ForbiddenAttributes) do
+      TestModel.new.sanitize_for_mass_assignment(DurableParameters::Core::Parameters.new(a: "b"))
     end
-    assert_equal "StrongParameters::Core::ForbiddenAttributes", error.message
+    assert_equal "DurableParameters::Core::ForbiddenAttributes", error.message
   end
 
   def test_permitted_parameters_with_nested_unpermitted_are_filtered
-    params = StrongParameters::Core::Parameters.new(user: {name: "John", password: "secret"})
+    params = DurableParameters::Core::Parameters.new(user: {name: "John", password: "secret"})
     permitted_params = params.permit(user: [:name])
     result = TestModel.new.sanitize_for_mass_assignment(permitted_params)
     assert_equal({"user" => {"name" => "John"}}, result.to_h)
   end
 
   def test_partially_permitted_parameters_are_allowed
-    params = StrongParameters::Core::Parameters.new(a: "1", b: "2")
+    params = DurableParameters::Core::Parameters.new(a: "1", b: "2")
     permitted_params = params.permit(:a)
     result = TestModel.new.sanitize_for_mass_assignment(permitted_params)
     assert_equal({"a" => "1"}, result.to_h)
   end
 
   def test_false_permitted_raises
-    params = StrongParameters::Core::Parameters.new(a: "1")
+    params = DurableParameters::Core::Parameters.new(a: "1")
     params.instance_variable_set(:@permitted, false) # Force permitted to false
-    assert_raises(StrongParameters::Core::ForbiddenAttributes) do
+    assert_raises(DurableParameters::Core::ForbiddenAttributes) do
       TestModel.new.sanitize_for_mass_assignment(params)
     end
   end
 
   def test_true_permitted_allows
-    params = StrongParameters::Core::Parameters.new(a: "1")
+    params = DurableParameters::Core::Parameters.new(a: "1")
     params.permit!
     result = TestModel.new.sanitize_for_mass_assignment(params)
     assert_equal({"a" => "1"}, result.to_h)

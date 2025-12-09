@@ -370,10 +370,10 @@ class ParamsRegistryTest < Minitest::Test
   end
 
   def test_normalize_key_consistency
-    # Ensure normalize_key is consistent
-    key1 = ActionController::ParamsRegistry.send(:normalize_key, "TestModel")
-    key2 = ActionController::ParamsRegistry.send(:normalize_key, :TestModel)
-    key3 = ActionController::ParamsRegistry.send(:normalize_key, "test_model")
+    # Ensure normalize_registry_key is consistent
+    key1 = ActionController::ParamsRegistry.send(:normalize_registry_key, "TestModel")
+    key2 = ActionController::ParamsRegistry.send(:normalize_registry_key, :TestModel)
+    key3 = ActionController::ParamsRegistry.send(:normalize_registry_key, "test_model")
 
     assert_equal key1, key2
     assert_equal key1, key3

@@ -5,176 +5,176 @@ require "test_helper"
 class ConfigurationTest < Minitest::Test
   def setup
     # Save original configuration
-    @original_action = StrongParameters::Core::Configuration.action_on_unpermitted_parameters
-    @original_handler = StrongParameters::Core::Configuration.unpermitted_notification_handler
-    @original_always_permitted = StrongParameters::Core::Configuration.always_permitted_parameters
+    @original_action = DurableParameters::Core::Configuration.action_on_unpermitted_parameters
+    @original_handler = DurableParameters::Core::Configuration.unpermitted_notification_handler
+    @original_always_permitted = DurableParameters::Core::Configuration.always_permitted_parameters
 
     # Save original Parameters class settings
-    @original_params_action = StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    @original_params_handler = StrongParameters::Core::Parameters.unpermitted_notification_handler
-    @original_params_never_unpermitted = StrongParameters::Core::Parameters.never_unpermitted_params
+    @original_params_action = DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    @original_params_handler = DurableParameters::Core::Parameters.unpermitted_notification_handler
+    @original_params_never_unpermitted = DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def teardown
     # Restore original configuration
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = @original_action
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = @original_handler
-    StrongParameters::Core::Configuration.always_permitted_parameters = @original_always_permitted
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = @original_action
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = @original_handler
+    DurableParameters::Core::Configuration.always_permitted_parameters = @original_always_permitted
 
     # Restore original Parameters class settings
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = @original_params_action
-    StrongParameters::Core::Parameters.unpermitted_notification_handler = @original_params_handler
-    StrongParameters::Core::Parameters.never_unpermitted_params = @original_params_never_unpermitted
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = @original_params_action
+    DurableParameters::Core::Parameters.unpermitted_notification_handler = @original_params_handler
+    DurableParameters::Core::Parameters.never_unpermitted_params = @original_params_never_unpermitted
   end
 
   def test_action_on_unpermitted_parameters_accessor
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
-    assert_equal :log, StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :log
+    assert_equal :log, DurableParameters::Core::Configuration.action_on_unpermitted_parameters
 
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
-    assert_equal :raise, StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
+    assert_equal :raise, DurableParameters::Core::Configuration.action_on_unpermitted_parameters
 
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = nil
-    assert_nil StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = nil
+    assert_nil DurableParameters::Core::Configuration.action_on_unpermitted_parameters
 
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = false
-    assert_equal false, StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = false
+    assert_equal false, DurableParameters::Core::Configuration.action_on_unpermitted_parameters
   end
 
   def test_unpermitted_notification_handler_accessor
     handler = proc { |keys| puts keys.join(", ") }
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
-    assert_equal handler, StrongParameters::Core::Configuration.unpermitted_notification_handler
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = handler
+    assert_equal handler, DurableParameters::Core::Configuration.unpermitted_notification_handler
 
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = nil
-    assert_nil StrongParameters::Core::Configuration.unpermitted_notification_handler
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = nil
+    assert_nil DurableParameters::Core::Configuration.unpermitted_notification_handler
   end
 
   def test_always_permitted_parameters_accessor
     custom_params = %w[controller action format]
-    StrongParameters::Core::Configuration.always_permitted_parameters = custom_params
-    assert_equal custom_params, StrongParameters::Core::Configuration.always_permitted_parameters
+    DurableParameters::Core::Configuration.always_permitted_parameters = custom_params
+    assert_equal custom_params, DurableParameters::Core::Configuration.always_permitted_parameters
   end
 
   def test_reset_resets_all_configuration
     # Set custom values
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
     handler = proc { |keys| }
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
-    StrongParameters::Core::Configuration.always_permitted_parameters = %w[custom]
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = handler
+    DurableParameters::Core::Configuration.always_permitted_parameters = %w[custom]
 
     # Reset
-    StrongParameters::Core::Configuration.reset!
+    DurableParameters::Core::Configuration.reset!
 
     # Verify defaults
-    assert_nil StrongParameters::Core::Configuration.action_on_unpermitted_parameters
-    assert_nil StrongParameters::Core::Configuration.unpermitted_notification_handler
-    assert_equal %w[controller action], StrongParameters::Core::Configuration.always_permitted_parameters
+    assert_nil DurableParameters::Core::Configuration.action_on_unpermitted_parameters
+    assert_nil DurableParameters::Core::Configuration.unpermitted_notification_handler
+    assert_equal %w[controller action], DurableParameters::Core::Configuration.always_permitted_parameters
   end
 
   def test_apply_synchronizes_with_parameters_class
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :log
     handler = proc { |keys| puts keys }
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
-    StrongParameters::Core::Configuration.always_permitted_parameters = %w[controller action format]
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = handler
+    DurableParameters::Core::Configuration.always_permitted_parameters = %w[controller action format]
 
-    StrongParameters::Core::Configuration.apply!
+    DurableParameters::Core::Configuration.apply!
 
-    assert_equal :log, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_equal handler, StrongParameters::Core::Parameters.unpermitted_notification_handler
-    assert_equal %w[controller action format], StrongParameters::Core::Parameters.never_unpermitted_params
+    assert_equal :log, DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal handler, DurableParameters::Core::Parameters.unpermitted_notification_handler
+    assert_equal %w[controller action format], DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_apply_synchronizes_nil_values
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = nil
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = nil
-    StrongParameters::Core::Configuration.always_permitted_parameters = []
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = nil
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = nil
+    DurableParameters::Core::Configuration.always_permitted_parameters = []
 
-    StrongParameters::Core::Configuration.apply!
+    DurableParameters::Core::Configuration.apply!
 
-    assert_nil StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_nil StrongParameters::Core::Parameters.unpermitted_notification_handler
-    assert_equal [], StrongParameters::Core::Parameters.never_unpermitted_params
+    assert_nil DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_nil DurableParameters::Core::Parameters.unpermitted_notification_handler
+    assert_equal [], DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_configuration_is_independent_of_parameters_class
     # Set configuration
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
-    StrongParameters::Core::Configuration.always_permitted_parameters = %w[custom]
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :log
+    DurableParameters::Core::Configuration.always_permitted_parameters = %w[custom]
 
     # Directly set Parameters class (without apply!)
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = :raise
-    StrongParameters::Core::Parameters.never_unpermitted_params = %w[other]
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = :raise
+    DurableParameters::Core::Parameters.never_unpermitted_params = %w[other]
 
     # Configuration should not be affected
-    assert_equal :log, StrongParameters::Core::Configuration.action_on_unpermitted_parameters
-    assert_equal %w[custom], StrongParameters::Core::Configuration.always_permitted_parameters
-    assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_equal %w[other], StrongParameters::Core::Parameters.never_unpermitted_params
+    assert_equal :log, DurableParameters::Core::Configuration.action_on_unpermitted_parameters
+    assert_equal %w[custom], DurableParameters::Core::Configuration.always_permitted_parameters
+    assert_equal :raise, DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[other], DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_reset_and_apply_workflow
     # Set custom configuration
-    StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
+    DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
     custom_handler = proc { |keys| puts keys }
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = custom_handler
-    StrongParameters::Core::Configuration.always_permitted_parameters = %w[custom]
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = custom_handler
+    DurableParameters::Core::Configuration.always_permitted_parameters = %w[custom]
 
     # Apply to Parameters class
-    StrongParameters::Core::Configuration.apply!
-    assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_equal %w[custom], StrongParameters::Core::Parameters.never_unpermitted_params
+    DurableParameters::Core::Configuration.apply!
+    assert_equal :raise, DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[custom], DurableParameters::Core::Parameters.never_unpermitted_params
 
     # Reset configuration
-    StrongParameters::Core::Configuration.reset!
-    assert_nil StrongParameters::Core::Configuration.action_on_unpermitted_parameters
-    assert_equal %w[controller action], StrongParameters::Core::Configuration.always_permitted_parameters
+    DurableParameters::Core::Configuration.reset!
+    assert_nil DurableParameters::Core::Configuration.action_on_unpermitted_parameters
+    assert_equal %w[controller action], DurableParameters::Core::Configuration.always_permitted_parameters
 
     # Parameters class is not automatically updated
-    assert_equal :raise, StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_equal %w[custom], StrongParameters::Core::Parameters.never_unpermitted_params
+    assert_equal :raise, DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[custom], DurableParameters::Core::Parameters.never_unpermitted_params
 
     # Apply again to synchronize
-    StrongParameters::Core::Configuration.apply!
-    assert_nil StrongParameters::Core::Parameters.action_on_unpermitted_parameters
-    assert_equal %w[controller action], StrongParameters::Core::Parameters.never_unpermitted_params
+    DurableParameters::Core::Configuration.apply!
+    assert_nil DurableParameters::Core::Parameters.action_on_unpermitted_parameters
+    assert_equal %w[controller action], DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_always_permitted_parameters_default
-    StrongParameters::Core::Configuration.reset!
-    assert_equal %w[controller action], StrongParameters::Core::Configuration.always_permitted_parameters
+    DurableParameters::Core::Configuration.reset!
+    assert_equal %w[controller action], DurableParameters::Core::Configuration.always_permitted_parameters
   end
 
   def test_parameters_never_unpermitted_params_default
     # Reset to ensure defaults
-    StrongParameters::Core::Configuration.reset!
-    StrongParameters::Core::Configuration.apply!
-    assert_equal %w[controller action], StrongParameters::Core::Parameters.never_unpermitted_params
+    DurableParameters::Core::Configuration.reset!
+    DurableParameters::Core::Configuration.apply!
+    assert_equal %w[controller action], DurableParameters::Core::Parameters.never_unpermitted_params
   end
 
   def test_always_permitted_parameters_frozen
-    StrongParameters::Core::Configuration.reset!
-    params = StrongParameters::Core::Configuration.always_permitted_parameters
+    DurableParameters::Core::Configuration.reset!
+    params = DurableParameters::Core::Configuration.always_permitted_parameters
     assert params.frozen?
   end
 
   def test_always_permitted_parameters_empty_array
-    StrongParameters::Core::Configuration.always_permitted_parameters = []
-    assert_equal [], StrongParameters::Core::Configuration.always_permitted_parameters
+    DurableParameters::Core::Configuration.always_permitted_parameters = []
+    assert_equal [], DurableParameters::Core::Configuration.always_permitted_parameters
   end
 
   def test_multiple_resets
     3.times do
-      StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
-      StrongParameters::Core::Configuration.reset!
-      assert_nil StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+      DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :raise
+      DurableParameters::Core::Configuration.reset!
+      assert_nil DurableParameters::Core::Configuration.action_on_unpermitted_parameters
     end
   end
 
   def test_handler_with_lambda
     handler = ->(keys) { keys.map(&:upcase) }
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
-    assert_equal handler, StrongParameters::Core::Configuration.unpermitted_notification_handler
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = handler
+    assert_equal handler, DurableParameters::Core::Configuration.unpermitted_notification_handler
   end
 
   def test_handler_with_method_object
@@ -184,16 +184,16 @@ class ConfigurationTest < Minitest::Test
       keys.join(",")
     end
 
-    StrongParameters::Core::Configuration.unpermitted_notification_handler = handler
-    assert_equal handler, StrongParameters::Core::Configuration.unpermitted_notification_handler
+    DurableParameters::Core::Configuration.unpermitted_notification_handler = handler
+    assert_equal handler, DurableParameters::Core::Configuration.unpermitted_notification_handler
   end
 
   def test_configuration_thread_safety
     threads = 10.times.map do |i|
       Thread.new do
-        StrongParameters::Core::Configuration.action_on_unpermitted_parameters = i.even? ? :log : :raise
+        DurableParameters::Core::Configuration.action_on_unpermitted_parameters = i.even? ? :log : :raise
         sleep 0.001
-        StrongParameters::Core::Configuration.action_on_unpermitted_parameters
+        DurableParameters::Core::Configuration.action_on_unpermitted_parameters
       end
     end
 
@@ -205,9 +205,9 @@ class ConfigurationTest < Minitest::Test
   def test_always_permitted_parameters_thread_safety
     threads = 10.times.map do |i|
       Thread.new do
-        StrongParameters::Core::Configuration.always_permitted_parameters = i.even? ? %w[controller action] : %w[format]
+        DurableParameters::Core::Configuration.always_permitted_parameters = i.even? ? %w[controller action] : %w[format]
         sleep 0.001
-        StrongParameters::Core::Configuration.always_permitted_parameters
+        DurableParameters::Core::Configuration.always_permitted_parameters
       end
     end
 

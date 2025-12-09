@@ -11,13 +11,13 @@ class HanamiAdapterTest < Minitest::Test
 
   # Test Hanami::Parameters class
   def test_hanami_parameters_class_inherits_from_core_parameters
-    params = StrongParameters::Adapters::Hanami::Parameters.new({})
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, params
-    assert_kind_of StrongParameters::Core::Parameters, params
+    params = DurableParameters::Adapters::Hanami::Parameters.new({})
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, params
+    assert_kind_of DurableParameters::Core::Parameters, params
   end
 
   def test_hanami_parameters_normalize_key_converts_to_string
-    params_class = StrongParameters::Adapters::Hanami::Parameters
+    params_class = DurableParameters::Adapters::Hanami::Parameters
     instance = params_class.new({})
 
     # Test with symbol
@@ -30,7 +30,7 @@ class HanamiAdapterTest < Minitest::Test
 
   def test_hanami_parameters_handles_mixed_key_types
     input_params = {"name" => "John", :email => "john@example.com", 123 => "value"}
-    params = StrongParameters::Adapters::Hanami::Parameters.new(input_params)
+    params = DurableParameters::Adapters::Hanami::Parameters.new(input_params)
 
     # Hanami uses string keys by default
     assert_equal "John", params["name"]
@@ -39,7 +39,7 @@ class HanamiAdapterTest < Minitest::Test
   end
 
   def test_hanami_parameters_permits_basic_functionality
-    params = StrongParameters::Adapters::Hanami::Parameters.new(
+    params = DurableParameters::Adapters::Hanami::Parameters.new(
       "user" => {"name" => "John", "email" => "john@example.com", "admin" => true}
     )
 
@@ -55,7 +55,7 @@ class HanamiAdapterTest < Minitest::Test
   def test_action_module_provides_strong_params_method_hanami_2x
     # Mock Hanami 2.x action
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       # Mock halt method for error handling
       def halt(status, response)
@@ -67,7 +67,7 @@ class HanamiAdapterTest < Minitest::Test
     request_params = {"user" => {"name" => "John", "email" => "john@example.com"}}
     strong_params = action.strong_params(request_params)
 
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, strong_params
     assert_equal "John", strong_params["user"]["name"]
     assert_equal "john@example.com", strong_params["user"]["email"]
   end
@@ -75,7 +75,7 @@ class HanamiAdapterTest < Minitest::Test
   def test_action_module_provides_strong_params_method_hanami_1x
     # Mock Hanami 1.x action
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -92,14 +92,14 @@ class HanamiAdapterTest < Minitest::Test
     action = mock_action.new({"user" => {"name" => "John", "email" => "john@example.com"}})
     strong_params = action.strong_params
 
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, strong_params
     assert_equal "John", strong_params["user"]["name"]
     assert_equal "john@example.com", strong_params["user"]["email"]
   end
 
   def test_action_module_strong_params_with_nil_params_obj
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -111,25 +111,25 @@ class HanamiAdapterTest < Minitest::Test
     action = mock_action.new({"user" => {"name" => "John"}})
     strong_params = action.strong_params(nil)
 
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, strong_params
     assert_equal "John", strong_params["user"]["name"]
   end
 
   def test_action_module_strong_params_with_empty_params
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
     end
 
     action = mock_action.new
     strong_params = action.strong_params
 
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, strong_params
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, strong_params
     assert_empty strong_params
   end
 
   def test_action_module_provides_sp_alias
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -142,13 +142,13 @@ class HanamiAdapterTest < Minitest::Test
     strong_params_result = action.strong_params
     sp_result = action.sp
     assert_equal strong_params_result, sp_result
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, sp_result
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, sp_result
   end
 
   # Test error handling methods
   def test_handle_parameter_missing_error
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       def initialize
         @halt_called = false
@@ -164,7 +164,7 @@ class HanamiAdapterTest < Minitest::Test
     end
 
     action = mock_action.new
-    exception = StrongParameters::Core::ParameterMissing.new("user")
+    exception = DurableParameters::Core::ParameterMissing.new("user")
 
     action.handle_parameter_missing(exception)
 
@@ -175,7 +175,7 @@ class HanamiAdapterTest < Minitest::Test
 
   def test_handle_forbidden_attributes_error
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       def initialize
         @halt_called = false
@@ -191,7 +191,7 @@ class HanamiAdapterTest < Minitest::Test
     end
 
     action = mock_action.new
-    exception = StrongParameters::Core::ForbiddenAttributes.new
+    exception = DurableParameters::Core::ForbiddenAttributes.new
 
     action.handle_forbidden_attributes(exception)
 
@@ -202,7 +202,7 @@ class HanamiAdapterTest < Minitest::Test
 
   def test_handle_unpermitted_parameters_error
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       def initialize
         @halt_called = false
@@ -218,7 +218,7 @@ class HanamiAdapterTest < Minitest::Test
     end
 
     action = mock_action.new
-    exception = StrongParameters::Core::UnpermittedParameters.new(["admin", "password"])
+    exception = DurableParameters::Core::UnpermittedParameters.new(["admin", "password"])
 
     action.handle_unpermitted_parameters(exception)
 
@@ -241,7 +241,7 @@ class HanamiAdapterTest < Minitest::Test
     end
 
     # Include the module
-    mock_base.include StrongParameters::Adapters::Hanami::Action
+    mock_base.include DurableParameters::Adapters::Hanami::Action
 
     # Check that error handling was set up
     handlers = mock_base.handled_exceptions
@@ -249,9 +249,9 @@ class HanamiAdapterTest < Minitest::Test
 
     # Each handler should be [{exception_class => handler_method}]
     expected_handlers = [
-      [{StrongParameters::Core::ParameterMissing => :handle_parameter_missing}],
-      [{StrongParameters::Core::ForbiddenAttributes => :handle_forbidden_attributes}],
-      [{StrongParameters::Core::UnpermittedParameters => :handle_unpermitted_parameters}]
+      [{DurableParameters::Core::ParameterMissing => :handle_parameter_missing}],
+      [{DurableParameters::Core::ForbiddenAttributes => :handle_forbidden_attributes}],
+      [{DurableParameters::Core::UnpermittedParameters => :handle_unpermitted_parameters}]
     ]
 
     expected_handlers.each do |expected|
@@ -266,7 +266,7 @@ class HanamiAdapterTest < Minitest::Test
 
     # Should not raise an error
     assert_silent do
-      mock_base.include StrongParameters::Adapters::Hanami::Action
+      mock_base.include DurableParameters::Adapters::Hanami::Action
     end
   end
 
@@ -280,13 +280,13 @@ class HanamiAdapterTest < Minitest::Test
     end
 
     # Reset any previous configuration
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
-    StrongParameters::Adapters::Hanami.setup!(mock_app)
+    DurableParameters::Adapters::Hanami.setup!(mock_app)
 
-    assert_equal :log, StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
+    assert_equal :log, DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
   end
 
   def test_setup_configures_logging_in_development_string
@@ -296,13 +296,13 @@ class HanamiAdapterTest < Minitest::Test
       end
     end
 
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
-    StrongParameters::Adapters::Hanami.setup!(mock_app)
+    DurableParameters::Adapters::Hanami.setup!(mock_app)
 
-    assert_equal :log, StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
+    assert_equal :log, DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
   end
 
   def test_setup_skips_logging_in_production
@@ -313,18 +313,18 @@ class HanamiAdapterTest < Minitest::Test
     end.new
 
     # Reset any previous configuration
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
     # Verify they're nil before setup
-    assert_nil StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert_nil StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
+    assert_nil DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert_nil DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
 
-    StrongParameters::Adapters::Hanami.setup!(mock_app)
+    DurableParameters::Adapters::Hanami.setup!(mock_app)
 
     # Should not set up logging in production (should remain nil)
-    assert_nil StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert_nil StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
+    assert_nil DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert_nil DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
   end
 
   def test_setup_uses_env_fallback_when_no_app
@@ -332,13 +332,13 @@ class HanamiAdapterTest < Minitest::Test
     original_env = ENV["HANAMI_ENV"]
     ENV["HANAMI_ENV"] = "development"
 
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
-    StrongParameters::Adapters::Hanami.setup!
+    DurableParameters::Adapters::Hanami.setup!
 
-    assert_equal :log, StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
+    assert_equal :log, DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
 
     ENV["HANAMI_ENV"] = original_env
   end
@@ -349,13 +349,13 @@ class HanamiAdapterTest < Minitest::Test
     ENV["HANAMI_ENV"] = nil
     ENV["RACK_ENV"] = "development"
 
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
-    StrongParameters::Adapters::Hanami.setup!
+    DurableParameters::Adapters::Hanami.setup!
 
-    assert_equal :log, StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
+    assert_equal :log, DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
 
     ENV["HANAMI_ENV"] = original_hanami_env
     ENV["RACK_ENV"] = original_rack_env
@@ -367,13 +367,13 @@ class HanamiAdapterTest < Minitest::Test
     Object.const_set(:Hanami, Module.new)
     ::Hanami.define_singleton_method(:env) { :development }
 
-    StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-    StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+    DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
 
-    StrongParameters::Adapters::Hanami.setup!
+    DurableParameters::Adapters::Hanami.setup!
 
-    assert_equal :log, StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
-    assert StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
+    assert_equal :log, DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters
+    assert DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler.is_a?(Proc)
 
     # Clean up
     Object.send(:remove_const, :Hanami)
@@ -403,9 +403,9 @@ class HanamiAdapterTest < Minitest::Test
     end.new
     mock_app.instance_variable_set(:@mock_logger, mock_logger)
 
-    StrongParameters::Adapters::Hanami.setup!(mock_app)
+    DurableParameters::Adapters::Hanami.setup!(mock_app)
 
-    handler = StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
+    handler = DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
     handler.call(["admin"])
 
     assert_includes mock_logger.messages, "Unpermitted parameters: admin"
@@ -430,9 +430,9 @@ class HanamiAdapterTest < Minitest::Test
     mock_hanami.define_singleton_method(:logger) { mock_logger }
     Object.const_set(:Hanami, mock_hanami)
 
-    StrongParameters::Adapters::Hanami.setup!
+    DurableParameters::Adapters::Hanami.setup!
 
-    handler = StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
+    handler = DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler
     handler.call(["password"])
 
     assert_includes mock_logger.messages, "Unpermitted parameters: password"
@@ -446,7 +446,7 @@ class HanamiAdapterTest < Minitest::Test
   def test_hanami_adapter_integration_basic_usage_hanami_2x
     # Mock Hanami 2.x action
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       def initialize(request_params)
         @request_params = request_params
@@ -472,7 +472,7 @@ class HanamiAdapterTest < Minitest::Test
   def test_hanami_adapter_integration_basic_usage_hanami_1x
     # Mock Hanami 1.x action
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -499,7 +499,7 @@ class HanamiAdapterTest < Minitest::Test
 
   def test_hanami_adapter_integration_with_nested_params
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -532,7 +532,7 @@ class HanamiAdapterTest < Minitest::Test
 
   def test_hanami_adapter_integration_error_handling_parameter_missing
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -541,7 +541,7 @@ class HanamiAdapterTest < Minitest::Test
       end
 
       def halt(status, response)
-        raise StrongParameters::Core::ParameterMissing.new("missing_param")
+        raise DurableParameters::Core::ParameterMissing.new("missing_param")
       end
 
       def call
@@ -551,14 +551,14 @@ class HanamiAdapterTest < Minitest::Test
 
     action = mock_action.new({"user" => {"name" => "John"}})
 
-    assert_raises StrongParameters::Core::ParameterMissing do
+    assert_raises DurableParameters::Core::ParameterMissing do
       action.call
     end
   end
 
   def test_hanami_adapter_integration_error_handling_forbidden_attributes
     mock_action = Class.new do
-      include StrongParameters::Adapters::Hanami::Action
+      include DurableParameters::Adapters::Hanami::Action
 
       attr_accessor :params
 
@@ -578,25 +578,25 @@ class HanamiAdapterTest < Minitest::Test
     result = action.call
 
     # The params should be wrapped but not permitted yet
-    assert_instance_of StrongParameters::Adapters::Hanami::Parameters, result
+    assert_instance_of DurableParameters::Adapters::Hanami::Parameters, result
   end
 
   # Test adapter loading and structure
   def test_hanami_adapter_is_module
-    assert StrongParameters::Adapters::Hanami.is_a?(Module)
+    assert DurableParameters::Adapters::Hanami.is_a?(Module)
   end
 
   def test_hanami_adapter_has_parameters_class
-    assert defined?(StrongParameters::Adapters::Hanami::Parameters)
-    assert StrongParameters::Adapters::Hanami::Parameters.is_a?(Class)
+    assert defined?(DurableParameters::Adapters::Hanami::Parameters)
+    assert DurableParameters::Adapters::Hanami::Parameters.is_a?(Class)
   end
 
   def test_hanami_adapter_has_action_module
-    assert defined?(StrongParameters::Adapters::Hanami::Action)
-    assert StrongParameters::Adapters::Hanami::Action.is_a?(Module)
+    assert defined?(DurableParameters::Adapters::Hanami::Action)
+    assert DurableParameters::Adapters::Hanami::Action.is_a?(Module)
   end
 
   def test_hanami_adapter_has_setup_method
-    assert StrongParameters::Adapters::Hanami.respond_to?(:setup!)
+    assert DurableParameters::Adapters::Hanami.respond_to?(:setup!)
   end
 end

@@ -1,22 +1,26 @@
 # frozen_string_literal: true
 
-module StrongParameters
+module DurableParameters
   module Core
     # Singleton registry for storing and retrieving param class definitions.
+    #
+    # Uses KeyNormalization for consistent key handling.
     #
     # ParamsRegistry provides a central location to register and look up params
     # classes for models. This enables automatic inference of params classes in
     # transform_params based on the model name.
     #
     # @example Registering a params class
-    #   StrongParameters::Core::ParamsRegistry.register(:user, UserParams)
+    #   DurableParameters::Core::ParamsRegistry.register(:user, UserParams)
     #
     # @example Looking up a params class
-    #   StrongParameters::Core::ParamsRegistry.lookup(:user) # => UserParams
+    #   DurableParameters::Core::ParamsRegistry.lookup(:user) # => UserParams
     #
     # @example Getting permitted attributes
-    #   StrongParameters::Core::ParamsRegistry.permitted_attributes_for(:user, action: :create)
+    #   DurableParameters::Core::ParamsRegistry.permitted_attributes_for(:user, action: :create)
     class ParamsRegistry
+      extend KeyNormalization
+
       class << self
         # Register a params class for a model.
         #
@@ -29,7 +33,7 @@ module StrongParameters
         #   ParamsRegistry.register(:user, UserParams)
         #   ParamsRegistry.register('BlogPost', BlogPostParams)
         def register(model_name, params_class)
-          registry[normalize_key(model_name)] = params_class
+          registry[normalize_registry_key(model_name)] = params_class
         end
 
         # Look up the params class for a model.
@@ -40,7 +44,7 @@ module StrongParameters
         #   ParamsRegistry.lookup(:user) # => UserParams
         #   ParamsRegistry.lookup(:unknown) # => nil
         def lookup(model_name)
-          registry[normalize_key(model_name)]
+          registry[normalize_registry_key(model_name)]
         end
 
         # Get permitted attributes for a model.
@@ -66,7 +70,7 @@ module StrongParameters
         #   ParamsRegistry.registered?(:user) # => true
         #   ParamsRegistry.registered?(:unknown) # => false
         def registered?(model_name)
-          registry.key?(normalize_key(model_name))
+          registry.key?(normalize_registry_key(model_name))
         end
 
         # Clear the registry.
@@ -93,21 +97,6 @@ module StrongParameters
         def registry
           @registry ||= {}
         end
-
-        # Normalize a key by underscoring and symbolizing it.
-        #
-        # @param key [String, Symbol] the key to normalize
-        # @return [Symbol] the normalized key
-        # @example
-        #   normalize_key('BlogPost') # => :blog_post
-        #   normalize_key(:user) # => :user
-         def normalize_key(key)
-           if key.to_s.respond_to?(:underscore)
-             key.to_s.underscore.to_sym
-           else
-             key.to_s.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase.to_sym
-           end
-         end
       end
     end
   end

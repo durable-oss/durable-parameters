@@ -2,7 +2,7 @@
 
 require "durable_parameters/core"
 
-module StrongParameters
+module DurableParameters
   module Adapters
     # Hanami adapter for Strong Parameters
     #
@@ -16,7 +16,7 @@ module StrongParameters
     #     module Actions
     #       module Users
     #         class Create < MyApp::Action
-    #           include StrongParameters::Adapters::Hanami::Action
+    #           include DurableParameters::Adapters::Hanami::Action
     #
     #           def handle(request, response)
     #             user_params = strong_params(request.params).require(:user).permit(:name, :email)
@@ -35,7 +35,7 @@ module StrongParameters
     #       module Users
     #         class Create
     #           include Web::Action
-    #           include StrongParameters::Adapters::Hanami::Action
+    #           include DurableParameters::Adapters::Hanami::Action
     #
     #           def call(params)
     #             user_params = strong_params.require(:user).permit(:name, :email)
@@ -47,14 +47,18 @@ module StrongParameters
     #   end
     module Hanami
       # Hanami-specific Parameters implementation
-      class Parameters < StrongParameters::Core::Parameters
-        # Hanami uses symbol keys by default
-
+      #
+      # Extends the core Parameters class for Hanami applications.
+      # Normalizes keys to strings for consistency.
+      class Parameters < DurableParameters::Core::Parameters
         # Ensure class variables are inherited
-        @never_unpermitted_params = StrongParameters::Core::Parameters.never_unpermitted_params
+        @never_unpermitted_params = DurableParameters::Core::Parameters.never_unpermitted_params
 
         private
 
+        # Normalize a key by converting to string
+        # @param key [Symbol, String] the key to normalize
+        # @return [String] the normalized key
         def normalize_key(key)
           key.to_s
         end
@@ -80,7 +84,7 @@ module StrongParameters
             {}
           end
 
-          ::StrongParameters::Adapters::Hanami::Parameters.new(params_hash)
+          ::DurableParameters::Adapters::Hanami::Parameters.new(params_hash)
         end
 
         # Alias for strong_params
@@ -88,26 +92,26 @@ module StrongParameters
 
         # Handle ParameterMissing errors (Hanami 2.x style)
         def handle_parameter_missing(exception)
-          halt 400, {error: "Required parameter missing: #{exception.param}"}.to_json
+          halt 400, {"error" => "Required parameter missing: #{exception.param}"}.to_json
         end
 
         # Handle ForbiddenAttributes errors (Hanami 2.x style)
         def handle_forbidden_attributes(exception)
-          halt 400, {error: "Forbidden attributes in mass assignment"}.to_json
+          halt 400, {"error" => "Forbidden attributes in mass assignment"}.to_json
         end
 
         # Handle UnpermittedParameters errors (Hanami 2.x style)
         def handle_unpermitted_parameters(exception)
-          halt 400, {error: "Unpermitted parameters: #{exception.params.join(", ")}"}.to_json
+          halt 400, {"error" => "Unpermitted parameters: #{exception.params.join(", ")}"}.to_json
         end
 
         # Set up error handling when this module is included
         def self.included(base)
           # Set up automatic error handling if possible
           if base.respond_to?(:handle_exception)
-            base.handle_exception StrongParameters::Core::ParameterMissing => :handle_parameter_missing
-            base.handle_exception StrongParameters::Core::ForbiddenAttributes => :handle_forbidden_attributes
-            base.handle_exception StrongParameters::Core::UnpermittedParameters => :handle_unpermitted_parameters
+            base.handle_exception DurableParameters::Core::ParameterMissing => :handle_parameter_missing
+            base.handle_exception DurableParameters::Core::ForbiddenAttributes => :handle_forbidden_attributes
+            base.handle_exception DurableParameters::Core::UnpermittedParameters => :handle_unpermitted_parameters
           end
         end
       end
@@ -125,8 +129,8 @@ module StrongParameters
 
         # Only configure logging in development
         if env == "development" || env == :development
-          ::StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = :log
-          ::StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = lambda do |keys|
+          ::DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = :log
+          ::DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = lambda do |keys|
             # Try to get logger from Hanami
             logger = if defined?(::Hanami) && ::Hanami.respond_to?(:logger)
               ::Hanami.logger
@@ -138,8 +142,8 @@ module StrongParameters
           end
         else
           # Clear logging in non-development environments
-          ::StrongParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
-          ::StrongParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
+          ::DurableParameters::Adapters::Hanami::Parameters.action_on_unpermitted_parameters = nil
+          ::DurableParameters::Adapters::Hanami::Parameters.unpermitted_notification_handler = nil
         end
       end
     end

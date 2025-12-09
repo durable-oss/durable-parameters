@@ -1,14 +1,14 @@
 require "test_helper"
 
 class Person
-  include StrongParameters::Core::ForbiddenAttributesProtection
+  include DurableParameters::Core::ForbiddenAttributesProtection
 
   public :sanitize_for_mass_assignment
 end
 
 class ActiveModelMassUpdateProtectionTest < Minitest::Test
   def test_forbidden_attributes_cannot_be_used_for_mass_updating
-    assert_raises(StrongParameters::Core::ForbiddenAttributes) do
+    assert_raises(DurableParameters::Core::ForbiddenAttributes) do
       Person.new.sanitize_for_mass_assignment(ActionController::Parameters.new(a: "b"))
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module StrongParameters
+module DurableParameters
   module Core
     # Exception raised when attempting mass assignment with unpermitted parameters.
     #
@@ -9,7 +9,7 @@ module StrongParameters
     #
     # @example
     #   User.new(params[:user])
-    #   # => StrongParameters::Core::ForbiddenAttributes (if :user params not permitted)
+    #   # => DurableParameters::Core::ForbiddenAttributes (if :user params not permitted)
     class ForbiddenAttributes < StandardError
     end
 
@@ -20,7 +20,7 @@ module StrongParameters
     #
     # @example Include in a model
     #   class Post
-    #     include StrongParameters::Core::ForbiddenAttributesProtection
+    #     include DurableParameters::Core::ForbiddenAttributesProtection
     #
     #     def initialize(attributes = {})
     #       assign_attributes(attributes)

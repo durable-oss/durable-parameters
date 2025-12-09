@@ -2,7 +2,7 @@
 
 require "active_support/descendants_tracker"
 
-module StrongParameters
+module DurableParameters
   module Core
     # Base class for declarative parameter permission definitions.
     #
@@ -12,14 +12,14 @@ module StrongParameters
     # permit() calls.
     #
     # @example Basic usage
-    #   class UserParams < StrongParameters::Core::ApplicationParams
+    #   class UserParams < DurableParameters::Core::ApplicationParams
     #     allow :name
     #     allow :email
     #     deny :is_admin
     #   end
     #
     # @example With action-specific permissions
-    #   class PostParams < StrongParameters::Core::ApplicationParams
+    #   class PostParams < DurableParameters::Core::ApplicationParams
     #     allow :title
     #     allow :body
     #     allow :published, only: :create
@@ -27,13 +27,13 @@ module StrongParameters
     #   end
     #
     # @example With metadata declaration
-    #   class AccountParams < StrongParameters::Core::ApplicationParams
+    #   class AccountParams < DurableParameters::Core::ApplicationParams
     #     allow :name
     #     metadata :ip_address, :role
     #   end
     #
     # @example With transformations
-    #   class UserParams < StrongParameters::Core::ApplicationParams
+    #   class UserParams < DurableParameters::Core::ApplicationParams
     #     allow :email
     #     allow :role
     #     metadata :current_user
@@ -260,11 +260,14 @@ module StrongParameters
         # @param key [Symbol, String] the metadata key
         # @return [Boolean] true if allowed, false otherwise
         # Note: :current_user is always allowed
-        def metadata_allowed?(key)
+        def allowed_metadata_key?(key)
           return false unless key.respond_to?(:to_sym)
           key = key.to_sym
           key == :current_user || allowed_metadata.include?(key)
         end
+
+        # @deprecated Use {#allowed_metadata_key?} instead
+        alias_method :metadata_allowed?, :allowed_metadata_key?
 
         # Get options for an attribute, checking parent classes as well
         # @param attribute [Symbol, String] the attribute name
@@ -361,33 +364,33 @@ module StrongParameters
           # Make a dup so we don't modify the original
           hash = hash.dup
 
-            # Apply each transformation
-            transformations.each do |attribute, transformer|
-              key_str = attribute.to_s
-              key_sym = attribute.to_sym
+          # Apply each transformation
+          transformations.each do |attribute, transformer|
+            key_str = attribute.to_s
+            key_sym = attribute.to_sym
 
-              # Check for string key first
-              if hash.key?(key_str)
-                original_value = hash[key_str]
-                duped_value = begin
-                  Marshal.load(Marshal.dump(original_value))
-                rescue TypeError
-                  original_value.dup rescue original_value
-                end
-                hash[key_str] = transformer.call(duped_value, metadata)
+            # Check for string key first
+            if hash.key?(key_str)
+              original_value = hash[key_str]
+              duped_value = begin
+                Marshal.load(Marshal.dump(original_value))
+              rescue TypeError
+                original_value.dup rescue original_value
               end
-
-              # Check for symbol key (even if string key exists, transform both if present)
-              if hash.key?(key_sym)
-                original_value = hash[key_sym]
-                duped_value = begin
-                  Marshal.load(Marshal.dump(original_value))
-                rescue TypeError
-                  original_value.dup rescue original_value
-                end
-                hash[key_sym] = transformer.call(duped_value, metadata)
-              end
+              hash[key_str] = transformer.call(duped_value, metadata)
             end
+
+            # Check for symbol key (even if string key exists, transform both if present)
+            if hash.key?(key_sym)
+              original_value = hash[key_sym]
+              duped_value = begin
+                Marshal.load(Marshal.dump(original_value))
+              rescue TypeError
+                original_value.dup rescue original_value
+              end
+              hash[key_sym] = transformer.call(duped_value, metadata)
+            end
+          end
 
           hash
         end

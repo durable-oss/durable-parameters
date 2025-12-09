@@ -4,7 +4,7 @@ require "date"
 require "bigdecimal"
 require "stringio"
 
-module StrongParameters
+module DurableParameters
   module Core
     # Exception raised when a required parameter is missing or empty.
     #
@@ -74,7 +74,7 @@ module StrongParameters
     # @example
     #   params.permit(:name)
     #   # With params containing :admin => true
-    #   # => StrongParameters::Core::UnpermittedParameters: found unpermitted parameters: admin
+    #   # => DurableParameters::Core::UnpermittedParameters: found unpermitted parameters: admin
     class UnpermittedParameters < IndexError
       # @return [Array<String>] the names of the unpermitted parameters
       attr_reader :params
@@ -94,10 +94,12 @@ module StrongParameters
     # requiring explicit permission for parameters before they can be used.
     #
     # @example Basic usage
-    #   params = StrongParameters::Core::Parameters.new(user: { name: 'John', admin: true })
+    #   params = DurableParameters::Core::Parameters.new(user: { name: 'John', admin: true })
     #   params.require(:user).permit(:name)
-    #   # => <StrongParameters::Core::Parameters {"name"=>"John"} permitted: true>
+    #   # => <DurableParameters::Core::Parameters {"name"=>"John"} permitted: true>
     class Parameters < Hash
+      include MetadataValidation
+
       # @return [Boolean] whether this Parameters object is permitted
       attr_accessor :permitted
       alias_method :permitted?, :permitted
@@ -621,35 +623,6 @@ module StrongParameters
         end
       end
 
-      # Validate that all provided metadata keys are allowed by the params class.
-      #
-      # @param params_class [Class] the params class to validate against
-      # @param metadata_keys [Array<Symbol>] the metadata keys to validate
-      # @raise [ArgumentError] if any metadata keys are not declared
-      # @return [void]
-      def validate_metadata_keys!(params_class, metadata_keys)
-        return if metadata_keys.empty?
-
-        disallowed_keys = metadata_keys.reject { |key| key == :current_user || params_class.metadata_allowed?(key) }
-
-        return unless disallowed_keys.any?
-
-        # Build a helpful error message
-        keys_list = disallowed_keys.map(&:inspect).join(", ")
-        class_name = params_class.name
-
-        raise ArgumentError, <<~ERROR.strip
-          Metadata key(s) #{keys_list} not allowed for #{class_name}.
-
-          To fix this, declare them in your params class:
-
-            class #{class_name} < ApplicationParams
-              metadata #{disallowed_keys.map(&:inspect).join(", ")}
-            end
-
-          Note: :current_user is always implicitly allowed and doesn't need to be declared.
-        ERROR
-      end
     end
   end
 end

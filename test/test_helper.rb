@@ -28,7 +28,7 @@ end
 require "durable_parameters"
 
 # Manually setup Rails adapter since we're not going through full Rails initialization
-StrongParameters::Adapters::Rails.setup!
+DurableParameters::Adapters::Rails.setup!
 
 # Note: ActionController::Base and related test infrastructure is loaded
 # only when needed by controller-specific tests to avoid dependency issues.
@@ -45,7 +45,7 @@ class Minitest::Test
     super
     # Clear the ParamsRegistry after each test to prevent pollution.
     # This removes references to classes defined in tests, allowing them to be GC'd.
-    StrongParameters::Core::ParamsRegistry.clear! if defined?(StrongParameters::Core::ParamsRegistry)
+    DurableParameters::Core::ParamsRegistry.clear! if defined?(DurableParameters::Core::ParamsRegistry)
     ActionController::ParamsRegistry.clear! if defined?(ActionController::ParamsRegistry)
     Legacy::ActionController::ParamsRegistry.clear! if defined?(Legacy::ActionController::ParamsRegistry)
   end

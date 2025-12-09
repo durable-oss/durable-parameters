@@ -2,7 +2,7 @@
 
 require "durable_parameters/core"
 
-module StrongParameters
+module DurableParameters
   module Adapters
     # Rage adapter for Strong Parameters
     #
@@ -20,11 +20,15 @@ module StrongParameters
     #   end
     module Rage
       # Rage-specific Parameters implementation
-      class Parameters < StrongParameters::Core::Parameters
-        # Rage uses string keys like Rails
-
+      #
+      # Extends the core Parameters class for Rage framework.
+      # Uses string keys like Rails for compatibility.
+      class Parameters < DurableParameters::Core::Parameters
         private
 
+        # Normalize a key by converting to string (Rails-compatible)
+        # @param key [Symbol, String] the key to normalize
+        # @return [String] the normalized key
         def normalize_key(key)
           key.to_s
         end
@@ -47,7 +51,7 @@ module StrongParameters
               {}
             end
 
-            ::StrongParameters::Adapters::Rage::Parameters.new(raw_params)
+            ::DurableParameters::Adapters::Rage::Parameters.new(raw_params)
           end
         end
 
@@ -56,31 +60,31 @@ module StrongParameters
         # @param val [Hash, Parameters] the parameters to set
         # @return [Parameters] the parameters
         def params=(val)
-          @_strong_params = val.is_a?(Hash) ? ::StrongParameters::Adapters::Rage::Parameters.new(val) : val
+          @_strong_params = val.is_a?(Hash) ? ::DurableParameters::Adapters::Rage::Parameters.new(val) : val
         end
 
         # Handle parameter missing errors
         def handle_parameter_missing(exception)
-          render json: {error: "Required parameter missing: #{exception.param}"}, status: 400
+          render json: {"error" => "Required parameter missing: #{exception.param}"}, status: 400
         end
 
         # Handle forbidden attributes errors
         def handle_forbidden_attributes(exception)
-          render json: {error: "Forbidden attributes in mass assignment"}, status: 400
+          render json: {"error" => "Forbidden attributes in mass assignment"}, status: 400
         end
 
         # Handle unpermitted parameters errors
         def handle_unpermitted_parameters(exception)
-          render json: {error: "Unpermitted parameters: #{exception.params.join(", ")}"}, status: 400
+          render json: {"error" => "Unpermitted parameters: #{exception.params.join(", ")}"}, status: 400
         end
 
         # Set up error handling when this module is included
         def self.included(base)
           # Rage uses rescue_from for error handling (Rails-compatible)
           if base.respond_to?(:rescue_from)
-            base.rescue_from StrongParameters::Core::ParameterMissing, with: :handle_parameter_missing
-            base.rescue_from StrongParameters::Core::ForbiddenAttributes, with: :handle_forbidden_attributes
-            base.rescue_from StrongParameters::Core::UnpermittedParameters, with: :handle_unpermitted_parameters
+            base.rescue_from DurableParameters::Core::ParameterMissing, with: :handle_parameter_missing
+            base.rescue_from DurableParameters::Core::ForbiddenAttributes, with: :handle_forbidden_attributes
+            base.rescue_from DurableParameters::Core::UnpermittedParameters, with: :handle_unpermitted_parameters
           end
         end
       end
@@ -92,8 +96,8 @@ module StrongParameters
         env = ENV["RAGE_ENV"] || ENV["RACK_ENV"] || "development"
 
         if env == "development" || env == "test"
-          ::StrongParameters::Adapters::Rage::Parameters.action_on_unpermitted_parameters = :log
-          ::StrongParameters::Adapters::Rage::Parameters.unpermitted_notification_handler = lambda do |keys|
+          ::DurableParameters::Adapters::Rage::Parameters.action_on_unpermitted_parameters = :log
+          ::DurableParameters::Adapters::Rage::Parameters.unpermitted_notification_handler = lambda do |keys|
             # Rage has a logger available
             logger = if defined?(::Rage) && ::Rage.respond_to?(:logger)
               ::Rage.logger

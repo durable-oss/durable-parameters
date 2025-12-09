@@ -5,26 +5,26 @@ require "test_helper"
 class CoreApplicationParamsTest < Minitest::Test
   def setup
     # Clear any existing registrations
-    StrongParameters::Core::ParamsRegistry.clear!
+    DurableParameters::Core::ParamsRegistry.clear!
   end
 
   def teardown
-    StrongParameters::Core::ParamsRegistry.clear!
+    DurableParameters::Core::ParamsRegistry.clear!
   end
 
   # Test basic class structure
   def test_application_params_is_a_class
-    assert StrongParameters::Core::ApplicationParams.is_a?(Class)
+    assert DurableParameters::Core::ApplicationParams.is_a?(Class)
   end
 
   def test_application_params_extends_descendants_tracker
-    assert StrongParameters::Core::ApplicationParams.respond_to?(:descendants)
-    assert StrongParameters::Core::ApplicationParams.descendants.is_a?(Array)
+    assert DurableParameters::Core::ApplicationParams.respond_to?(:descendants)
+    assert DurableParameters::Core::ApplicationParams.descendants.is_a?(Array)
   end
 
   # Test DSL methods
   def test_allow_adds_to_allowed_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email
     end
@@ -33,7 +33,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_deny_adds_to_denied_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       deny :admin
       deny :super_user
     end
@@ -42,7 +42,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_flag_sets_flag_values
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       flag :require_approval, true
       flag :auto_verify, false
     end
@@ -53,7 +53,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_metadata_adds_to_allowed_metadata
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       metadata :current_user
       metadata :request_ip
     end
@@ -63,13 +63,13 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_current_user_is_always_allowed_in_metadata
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
     assert params_class.metadata_allowed?(:current_user)
   end
 
   def test_transform_stores_transformation_blocks
     transformation_called = false
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         transformation_called = true
@@ -86,7 +86,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test attribute checking methods
   def test_allowed_returns_true_for_allowed_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
@@ -95,7 +95,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_allowed_returns_false_for_denied_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :admin
       deny :admin
     end
@@ -105,7 +105,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_allowed_returns_false_for_non_allowed_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
@@ -113,7 +113,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_denied_returns_true_for_denied_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       deny :secret
     end
 
@@ -122,7 +122,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test permitted_attributes generation
   def test_permitted_attributes_returns_allowed_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email
       deny :admin
@@ -133,7 +133,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_with_array_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :tags, array: true
       allow :scores, array: true
     end
@@ -143,7 +143,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_with_action_filtering
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :title
       allow :published, only: :create
       allow :updated_at, except: :create
@@ -161,7 +161,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_caching
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
@@ -174,7 +174,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_cache_invalidation_on_allow
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
@@ -187,7 +187,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_cache_invalidation_on_deny
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :admin
     end
@@ -201,7 +201,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_cache_separate_for_actions
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :admin, only: :create
     end
@@ -220,7 +220,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_cache_invalidation_on_attribute_options_change
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :field, only: :create
     end
 
@@ -233,11 +233,11 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_cache_not_shared_between_classes
-    class1 = Class.new(StrongParameters::Core::ApplicationParams) do
+    class1 = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
-    class2 = Class.new(StrongParameters::Core::ApplicationParams) do
+    class2 = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
 
@@ -252,7 +252,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test inheritance
   def test_inheritance_copies_allowed_attributes
-    parent_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email
     end
@@ -265,7 +265,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_inheritance_copies_denied_attributes
-    parent_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent_class = Class.new(DurableParameters::Core::ApplicationParams) do
       deny :admin
     end
 
@@ -277,7 +277,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_inheritance_copies_flags
-    parent_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent_class = Class.new(DurableParameters::Core::ApplicationParams) do
       flag :require_approval, true
     end
 
@@ -290,7 +290,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_inheritance_copies_metadata
-    parent_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent_class = Class.new(DurableParameters::Core::ApplicationParams) do
       metadata :current_user
     end
 
@@ -306,7 +306,7 @@ class CoreApplicationParamsTest < Minitest::Test
     parent_called = false
     child_called = false
 
-    parent_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         parent_called = true
@@ -329,7 +329,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_complex_inheritance_with_multiple_levels
-    grandparent = Class.new(StrongParameters::Core::ApplicationParams) do
+    grandparent = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :id
       deny :secret
       flag :inherited_flag, true
@@ -376,7 +376,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_inheritance_with_attribute_options
-    parent = Class.new(StrongParameters::Core::ApplicationParams) do
+    parent = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :field1, only: :create
       allow :field2, except: :update
     end
@@ -404,7 +404,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test invalid inputs
   def test_allowed_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     # Objects that don't respond to to_sym should return false
     refute params_class.allowed?(123)
@@ -414,7 +414,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_denied_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     refute params_class.denied?(123)
     refute params_class.denied?([])
@@ -423,7 +423,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_flag_with_non_symbolizable_name
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     assert_nil params_class.flag?(123)
     assert_nil params_class.flag?([])
@@ -432,7 +432,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_metadata_allowed_with_non_symbolizable_key
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     refute params_class.metadata_allowed?(123)
     refute params_class.metadata_allowed?([])
@@ -441,7 +441,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_attribute_options_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     assert_equal({}, params_class.attribute_options(123))
     assert_equal({}, params_class.attribute_options([]))
@@ -450,7 +450,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_allow_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     # Should not raise, but should not add anything
     params_class.allow(123)
@@ -461,7 +461,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_deny_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     params_class.deny(123)
     params_class.deny([])
@@ -471,7 +471,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_flag_with_non_symbolizable_name_sets_nothing
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     params_class.flag(123, "value")
     params_class.flag([], "value")
@@ -481,7 +481,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_metadata_with_non_symbolizable_keys
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     params_class.metadata(123)
     params_class.metadata([])
@@ -491,7 +491,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_transform_with_non_symbolizable_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
 
     # Should not raise, but should not add transformation
     params_class.transform(123) { |v| v }
@@ -503,7 +503,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test transformations
   def test_apply_transformations_with_no_transformations
-    params_class = Class.new(StrongParameters::Core::ApplicationParams)
+    params_class = Class.new(DurableParameters::Core::ApplicationParams)
     input = {name: "John", email: "john@example.com"}
     result = params_class.apply_transformations(input)
 
@@ -511,7 +511,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_hash_input
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         value&.downcase&.strip
@@ -526,21 +526,21 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_parameters_object
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         value&.upcase
       end
     end
 
-    params = StrongParameters::Core::Parameters.new(email: "test@example.com")
+    params = DurableParameters::Core::Parameters.new(email: "test@example.com")
     result = params_class.apply_transformations(params)
 
     assert_equal "TEST@EXAMPLE.COM", result["email"]
   end
 
   def test_apply_transformations_with_metadata
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :role
       metadata :current_user
       transform :role do |value, metadata|
@@ -568,7 +568,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_handles_nil_values
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         value&.upcase
@@ -581,7 +581,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   def test_apply_transformations_with_deep_dup
     transformed = false
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :data
       transform :data do |value, metadata|
         transformed = true
@@ -599,7 +599,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_nil_params
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       transform :email do |value, metadata|
         "transformed"
       end
@@ -610,7 +610,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_non_hash_params
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       transform :email do |value, metadata|
         "transformed"
       end
@@ -627,7 +627,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_mixed_string_symbol_keys
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         value&.upcase
@@ -650,7 +650,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_apply_transformations_with_unserializable_objects
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :data
       transform :data do |value, metadata|
         # Try to modify the value
@@ -671,7 +671,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test attribute options
   def test_attribute_options_stores_options
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :tags, array: true, only: :create
     end
 
@@ -680,7 +680,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_attribute_options_normalizes_only_and_except
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :field1, only: :create
       allow :field2, except: [:update, :destroy]
     end
@@ -691,7 +691,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test edge cases
   def test_allow_with_duplicate_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :name
       allow :name
@@ -701,7 +701,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_deny_with_duplicate_attributes
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       deny :admin
       deny :admin
     end
@@ -710,7 +710,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_allow_overwrites_previous_options
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :field, only: :create
       allow :field, array: true
     end
@@ -720,7 +720,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_metadata_with_duplicate_keys
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       metadata :current_user
       metadata :current_user
     end
@@ -730,7 +730,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   def test_transform_requires_block
     assert_raises(ArgumentError) do
-      Class.new(StrongParameters::Core::ApplicationParams) do
+      Class.new(DurableParameters::Core::ApplicationParams) do
         transform :email
       end
     end
@@ -740,7 +740,7 @@ class CoreApplicationParamsTest < Minitest::Test
     first_called = false
     second_called = false
 
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         first_called = true
@@ -760,7 +760,7 @@ class CoreApplicationParamsTest < Minitest::Test
 
   # Test complex scenarios
   def test_complex_inheritance_with_overrides
-    base_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    base_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email
       deny :admin
@@ -786,7 +786,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_multiple_transformations_on_same_attribute
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :email
       transform :email do |value, metadata|
         value&.strip&.downcase
@@ -798,7 +798,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_transformations_with_non_hash_input
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       transform :email do |value, metadata|
         "transformed"
       end
@@ -810,7 +810,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_with_mixed_array_and_scalar
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :tags, array: true
       allow :age
@@ -825,7 +825,7 @@ class CoreApplicationParamsTest < Minitest::Test
   end
 
   def test_permitted_attributes_with_complex_action_filters
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :title
       allow :content, only: [:create, :update]
       allow :published_at, only: :create

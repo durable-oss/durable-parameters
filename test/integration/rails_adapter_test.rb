@@ -194,7 +194,7 @@ class RailsAdapterTest < Minitest::Test
 
   # Test Rails Parameters class
   def test_rails_parameters_indifferent_access_with_symbol_key
-    params = StrongParameters::Adapters::Rails::Parameters.new({"name" => "John", "email" => "john@example.com"})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"name" => "John", "email" => "john@example.com"})
 
     assert_equal "John", params[:name]
     assert_equal "John", params["name"]
@@ -203,7 +203,7 @@ class RailsAdapterTest < Minitest::Test
   end
 
   def test_rails_parameters_indifferent_access_assignment
-    params = StrongParameters::Adapters::Rails::Parameters.new
+    params = DurableParameters::Adapters::Rails::Parameters.new
 
     params[:name] = "John"
     params["email"] = "john@example.com"
@@ -213,7 +213,7 @@ class RailsAdapterTest < Minitest::Test
   end
 
   def test_rails_parameters_has_key_indifferent
-    params = StrongParameters::Adapters::Rails::Parameters.new({"name" => "John"})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"name" => "John"})
 
     assert params.has_key?(:name)
     assert params.has_key?("name")
@@ -224,7 +224,7 @@ class RailsAdapterTest < Minitest::Test
   end
 
   def test_rails_parameters_delete_indifferent
-    params = StrongParameters::Adapters::Rails::Parameters.new({"name" => "John", "email" => "john@example.com"})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"name" => "John", "email" => "john@example.com"})
 
     deleted = params.delete(:name)
 
@@ -235,7 +235,7 @@ class RailsAdapterTest < Minitest::Test
   end
 
   def test_rails_parameters_fetch_indifferent
-    params = StrongParameters::Adapters::Rails::Parameters.new({"name" => "John"})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"name" => "John"})
 
     assert_equal "John", params.fetch(:name)
     assert_equal "John", params.fetch("name")
@@ -248,7 +248,7 @@ class RailsAdapterTest < Minitest::Test
       type: "image/jpeg"
     )
 
-    params = StrongParameters::Adapters::Rails::Parameters.new({"file" => uploaded_file})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"file" => uploaded_file})
 
     assert params.permit(:file)
   end
@@ -257,21 +257,21 @@ class RailsAdapterTest < Minitest::Test
     # Create a mock Rack uploaded file
     uploaded_file = Rack::Test::UploadedFile.new(Tempfile.new, "image/jpeg")
 
-    params = StrongParameters::Adapters::Rails::Parameters.new({"file" => uploaded_file})
+    params = DurableParameters::Adapters::Rails::Parameters.new({"file" => uploaded_file})
 
     assert params.permit(:file)
   end
 
   def test_rails_parameters_initializes_with_hash_with_indifferent_access
     hash = {name: "John", email: "john@example.com"}.with_indifferent_access
-    params = StrongParameters::Adapters::Rails::Parameters.new(hash)
+    params = DurableParameters::Adapters::Rails::Parameters.new(hash)
 
     assert_equal "John", params[:name]
     assert_equal "John", params["name"]
   end
 
   def test_rails_parameters_initializes_with_nil
-    params = StrongParameters::Adapters::Rails::Parameters.new(nil)
+    params = DurableParameters::Adapters::Rails::Parameters.new(nil)
 
     assert_empty params
   end
@@ -282,7 +282,7 @@ class RailsAdapterTest < Minitest::Test
   if defined?(ActiveModel)
     class TestModel
       include ActiveModel::Model
-      include StrongParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection
+      include DurableParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection
 
       attr_accessor :name, :email
 
@@ -304,11 +304,11 @@ class RailsAdapterTest < Minitest::Test
     def test_active_model_forbidden_attributes_protection_raises_on_unpermitted_params
       unpermitted_params = ActionController::Parameters.new(name: "John", admin: true)
 
-      error = assert_raises(StrongParameters::Core::ForbiddenAttributes) do
+      error = assert_raises(DurableParameters::Core::ForbiddenAttributes) do
         TestModel.new(unpermitted_params)
       end
 
-      assert_instance_of StrongParameters::Core::ForbiddenAttributes, error
+      assert_instance_of DurableParameters::Core::ForbiddenAttributes, error
     end
 
     def test_active_model_forbidden_attributes_protection_allows_non_parameters_hash
@@ -324,31 +324,31 @@ class RailsAdapterTest < Minitest::Test
   # Test setup! method
   def test_setup_extends_action_controller_parameters
     # The setup! is already called in test_helper.rb, so ActionController::Parameters should be extended
-    assert ActionController::Parameters.include?(StrongParameters::Adapters::Rails::ParametersExtension)
+    assert ActionController::Parameters.include?(DurableParameters::Adapters::Rails::ParametersExtension)
   end
 
   def test_setup_adds_application_params_to_action_controller
-    assert_equal StrongParameters::Core::ApplicationParams, ActionController::ApplicationParams
+    assert_equal DurableParameters::Core::ApplicationParams, ActionController::ApplicationParams
   end
 
   def test_setup_adds_params_registry_to_action_controller
-    assert_equal StrongParameters::Core::ParamsRegistry, ActionController::ParamsRegistry
+    assert_equal DurableParameters::Core::ParamsRegistry, ActionController::ParamsRegistry
   end
 
   def test_setup_adds_forbidden_attributes_to_active_model
     skip "ActiveModel not loaded in test environment" unless defined?(ActiveModel)
-    assert_equal StrongParameters::Core::ForbiddenAttributes, ActiveModel::ForbiddenAttributes
+    assert_equal DurableParameters::Core::ForbiddenAttributes, ActiveModel::ForbiddenAttributes
   end
 
   def test_setup_adds_forbidden_attributes_protection_to_active_model
     skip "ActiveModel not loaded in test environment" unless defined?(ActiveModel)
-    assert_equal StrongParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection, ActiveModel::ForbiddenAttributesProtection
+    assert_equal DurableParameters::Adapters::Rails::ActiveModel::ForbiddenAttributesProtection, ActiveModel::ForbiddenAttributesProtection
   end
 end
 
-# Test ActionController::StrongParameters concern
+# Test ActionController::DurableParameters concern
 class TestController < ActionController::Base
-  include StrongParameters::Adapters::Rails::ActionController::StrongParameters
+  include DurableParameters::Adapters::Rails::ActionController::DurableParameters
 
   def test_action
     render plain: "OK"
@@ -382,14 +382,14 @@ class RailsAdapterControllerTest < ActionController::TestCase
   def test_action_controller_params_method_returns_rails_parameters
     post :test_action, params: {user: {name: "John"}}
 
-    assert_instance_of StrongParameters::Adapters::Rails::Parameters, @controller.params
+    assert_instance_of DurableParameters::Adapters::Rails::Parameters, @controller.params
     assert_equal "John", @controller.params[:user][:name]
   end
 
   def test_action_controller_params_assignment
     @controller.params = {user: {name: "Jane"}}
 
-    assert_instance_of StrongParameters::Adapters::Rails::Parameters, @controller.params
+    assert_instance_of DurableParameters::Adapters::Rails::Parameters, @controller.params
     assert_equal "Jane", @controller.params[:user][:name]
   end
 

@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-module StrongParameters
+module DurableParameters
   module Core
-    # Configuration module for StrongParameters behavior.
+    # Configuration module for DurableParameters behavior.
     #
-    # This module provides centralized configuration for how strong parameters
+    # This module provides centralized configuration for how durable parameters
     # behaves throughout the application, including handling of unpermitted
     # parameters and notification mechanisms.
     #
     # @example Configure action on unpermitted parameters
-    #   StrongParameters::Core::Configuration.action_on_unpermitted_parameters = :log
+    #   DurableParameters::Core::Configuration.action_on_unpermitted_parameters = :log
     #
     # @example Set custom notification handler
-    #   StrongParameters::Core::Configuration.unpermitted_notification_handler = ->(keys) do
+    #   DurableParameters::Core::Configuration.unpermitted_notification_handler = ->(keys) do
     #     Rails.logger.warn("Unpermitted parameters: #{keys.join(', ')}")
     #   end
     module Configuration

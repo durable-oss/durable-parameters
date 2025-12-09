@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-# Strong Parameters provides a whitelist-based approach to mass assignment protection.
+# Durable Parameters provides a whitelist-based approach to mass assignment protection.
 #
 # This gem provides a framework-agnostic approach to parameter filtering and mass
 # assignment protection, with adapters for various Ruby web frameworks including
 # Rails, Sinatra, Hanami, and Rage.
 #
-# @see StrongParameters::Core::Parameters
-# @see StrongParameters::Core::ApplicationParams
-# @see StrongParameters::Core::ParamsRegistry
+# @see DurableParameters::Core::Parameters
+# @see DurableParameters::Core::ApplicationParams
+# @see DurableParameters::Core::ParamsRegistry
 
 require "durable_parameters/version"
 require "durable_parameters/core"
@@ -24,18 +24,15 @@ elsif defined?(Sinatra)
 elsif defined?(Hanami)
   # Hanami is loaded - auto-setup Hanami adapter
   require "durable_parameters/adapters/hanami"
-  StrongParameters::Adapters::Hanami.setup!
+  DurableParameters::Adapters::Hanami.setup!
 elsif defined?(Rage) || defined?(RageController)
   # Rage is loaded - auto-setup Rage adapter
   require "durable_parameters/adapters/rage"
-  StrongParameters::Adapters::Rage.setup!
+  DurableParameters::Adapters::Rage.setup!
 end
 
 # Provide top-level convenience aliases
-module StrongParameters
-  # Gem version
-  VERSION = DurableParameters::VERSION
-
+module DurableParameters
   # Convenience aliases for core classes
   Parameters = Core::Parameters unless defined?(Parameters)
   ApplicationParams = Core::ApplicationParams unless defined?(ApplicationParams)

@@ -4,7 +4,7 @@ require "test_helper"
 
 class EnhancedErrorMessagesTest < Minitest::Test
   def setup
-    @params = StrongParameters::Core::Parameters.new(
+    @params = DurableParameters::Core::Parameters.new(
       usr: {name: "John", email: "john@example.com"},
       account: {balance: 100},
       data: {value: "test"}
@@ -12,7 +12,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_includes_available_keys_in_error_message
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       @params.require(:missing_key)
     end
 
@@ -23,7 +23,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_suggests_similar_keys
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       @params.require(:user)  # Similar to 'usr'
     end
 
@@ -32,7 +32,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_suggests_keys_starting_with_same_letter
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       @params.require(:accounts)  # Similar to 'account'
     end
 
@@ -41,7 +41,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_does_not_suggest_when_no_similar_keys_exist
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       @params.require(:xyz)
     end
 
@@ -51,9 +51,9 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_with_empty_params_shows_helpful_message
-    empty_params = StrongParameters::Core::Parameters.new({})
+    empty_params = DurableParameters::Core::Parameters.new({})
 
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       empty_params.require(:user)
     end
 
@@ -61,13 +61,13 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_with_nested_params
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       user: {profile: {name: "John"}}
     )
 
     user_params = params.require(:user)
 
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       user_params.require(:preferences)
     end
 
@@ -76,7 +76,7 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_stores_param_attribute
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       @params.require(:missing)
     end
 
@@ -84,9 +84,9 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_when_value_is_empty_hash
-    params = StrongParameters::Core::Parameters.new(user: {})
+    params = DurableParameters::Core::Parameters.new(user: {})
 
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       params.require(:user)
     end
 
@@ -94,9 +94,9 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_when_value_is_empty_array
-    params = StrongParameters::Core::Parameters.new(tags: [])
+    params = DurableParameters::Core::Parameters.new(tags: [])
 
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       params.require(:tags)
     end
 
@@ -104,12 +104,12 @@ class EnhancedErrorMessagesTest < Minitest::Test
   end
 
   def test_parameter_missing_suggestion_with_partial_match
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       user_profile: {name: "John"},
       user_settings: {theme: "dark"}
     )
 
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       params.require(:user)
     end
 

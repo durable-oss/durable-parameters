@@ -3,7 +3,7 @@
 require "rails/railtie"
 require "durable_parameters/adapters/rails"
 
-module StrongParameters
+module DurableParameters
   # Rails integration for Strong Parameters.
   #
   # This railtie configures Strong Parameters within Rails applications,
@@ -11,7 +11,7 @@ module StrongParameters
   class Railtie < ::Rails::Railtie
     # Setup Rails adapter
     config.before_initialize do
-      StrongParameters::Adapters::Rails.setup!
+      DurableParameters::Adapters::Rails.setup!
     end
 
     # Configure scaffold generator to use durable_parameters controller template
@@ -23,7 +23,7 @@ module StrongParameters
 
     # Configure action on unpermitted parameters (log in dev/test, silent in production)
     initializer "strong_parameters.config", before: "action_controller.set_configs" do |app|
-      StrongParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
+      DurableParameters::Adapters::Rails::Parameters.action_on_unpermitted_parameters =
         app.config.action_controller.delete(:action_on_unpermitted_parameters) do
           (Rails.env.test? || Rails.env.development?) ? :log : false
         end
@@ -51,14 +51,14 @@ module StrongParameters
       end
 
       # Register all ApplicationParams subclasses with the registry
-      next unless defined?(StrongParameters::Core::ApplicationParams)
+      next unless defined?(DurableParameters::Core::ApplicationParams)
 
-      StrongParameters::Core::ApplicationParams.descendants.each do |params_class|
+      DurableParameters::Core::ApplicationParams.descendants.each do |params_class|
         # Extract model name from class name (e.g., UserParams -> User)
         next unless params_class.name =~ /(.+)Params$/
 
         model_name = ::Regexp.last_match(1)
-        StrongParameters::Core::ParamsRegistry.register(model_name, params_class)
+        DurableParameters::Core::ParamsRegistry.register(model_name, params_class)
       end
     end
   end

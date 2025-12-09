@@ -5,22 +5,22 @@ require "test_helper"
 # Additional edge case tests for comprehensive coverage
 class ParametersEdgeCasesExpandedTest < Minitest::Test
   def setup
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = nil
   end
 
   def teardown
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = nil
   end
 
   # Test permit_by_model (legacy method)
   def test_permit_by_model_with_registered_class
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email
     end
-    StrongParameters::Core::ParamsRegistry.register(:user, params_class)
+    DurableParameters::Core::ParamsRegistry.register(:user, params_class)
 
-    params = StrongParameters::Core::Parameters.new(user: {name: "John", email: "john@example.com", admin: true})
+    params = DurableParameters::Core::Parameters.new(user: {name: "John", email: "john@example.com", admin: true})
     user_params = params.require(:user)
     permitted = user_params.permit_by_model(:user)
 
@@ -29,17 +29,17 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
     assert_nil permitted[:admin]
     assert permitted.permitted?
   ensure
-    StrongParameters::Core::ParamsRegistry.clear!
+    DurableParameters::Core::ParamsRegistry.clear!
   end
 
   def test_permit_by_model_with_action
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
       allow :email, only: :create
     end
-    StrongParameters::Core::ParamsRegistry.register(:user, params_class)
+    DurableParameters::Core::ParamsRegistry.register(:user, params_class)
 
-    params = StrongParameters::Core::Parameters.new(user: {name: "John", email: "john@example.com"})
+    params = DurableParameters::Core::Parameters.new(user: {name: "John", email: "john@example.com"})
     user_params = params.require(:user)
 
     # With create action
@@ -52,45 +52,45 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
     assert_equal "John", permitted_update[:name]
     assert_nil permitted_update[:email]
   ensure
-    StrongParameters::Core::ParamsRegistry.clear!
+    DurableParameters::Core::ParamsRegistry.clear!
   end
 
   def test_permit_by_model_with_additional_attrs
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
     end
-    StrongParameters::Core::ParamsRegistry.register(:user, params_class)
+    DurableParameters::Core::ParamsRegistry.register(:user, params_class)
 
-    params = StrongParameters::Core::Parameters.new(user: {name: "John", token: "abc123"})
+    params = DurableParameters::Core::Parameters.new(user: {name: "John", token: "abc123"})
     user_params = params.require(:user)
     permitted = user_params.permit_by_model(:user, additional_attrs: [:token])
 
     assert_equal "John", permitted[:name]
     assert_equal "abc123", permitted[:token]
   ensure
-    StrongParameters::Core::ParamsRegistry.clear!
+    DurableParameters::Core::ParamsRegistry.clear!
   end
 
   # Test convert_value protected method variations
   def test_convert_value_with_parameters_instance
-    params = StrongParameters::Core::Parameters.new(name: "John")
-    inner_params = StrongParameters::Core::Parameters.new(bio: "Developer")
+    params = DurableParameters::Core::Parameters.new(name: "John")
+    inner_params = DurableParameters::Core::Parameters.new(bio: "Developer")
     converted = params.send(:convert_value, inner_params)
     assert_equal inner_params, converted
-    assert converted.is_a?(StrongParameters::Core::Parameters)
+    assert converted.is_a?(DurableParameters::Core::Parameters)
   end
 
   def test_convert_value_with_empty_array
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     converted = params.send(:convert_value, [])
     assert_equal [], converted
   end
 
   def test_convert_value_with_mixed_array
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     array = [{name: "John"}, "string", 123, nil]
     converted = params.send(:convert_value, array)
-    assert converted[0].is_a?(StrongParameters::Core::Parameters)
+    assert converted[0].is_a?(DurableParameters::Core::Parameters)
     assert_equal "string", converted[1]
     assert_equal 123, converted[2]
     assert_nil converted[3]
@@ -98,7 +98,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test permitted? alias
   def test_permitted_alias
-    params = StrongParameters::Core::Parameters.new(name: "John")
+    params = DurableParameters::Core::Parameters.new(name: "John")
     refute params.permitted?
     params.permit!
     assert params.permitted?
@@ -106,23 +106,23 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test permitted scalar types edge cases
   def test_permitted_scalar_with_range
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     refute params.send(:permitted_scalar?, 1..10)
   end
 
   def test_permitted_scalar_with_rational
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     assert params.send(:permitted_scalar?, Rational(1, 2))
   end
 
   def test_permitted_scalar_with_complex
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     assert params.send(:permitted_scalar?, Complex(1, 2))
   end
 
   # Test multi-parameter attributes with different suffixes
   def test_permit_multi_parameter_with_f_suffix
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       "price(1f)" => "123.45",
       "price(2f)" => "0.99"
     )
@@ -132,7 +132,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
   end
 
   def test_permit_multi_parameter_with_i_suffix
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       "date(1i)" => "2023",
       "date(2i)" => "12",
       "date(3i)" => "25"
@@ -145,19 +145,19 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test empty and edge case values
   def test_empty_string_key
-    params = StrongParameters::Core::Parameters.new("" => "value")
+    params = DurableParameters::Core::Parameters.new("" => "value")
     assert_equal "value", params[""]
   end
 
   def test_whitespace_key
-    params = StrongParameters::Core::Parameters.new("  " => "value")
+    params = DurableParameters::Core::Parameters.new("  " => "value")
     assert_equal "value", params["  "]
   end
 
   # Test fetch with KeyError handling
   def test_fetch_raises_parameter_missing_on_key_error
-    params = StrongParameters::Core::Parameters.new(name: "John")
-    error = assert_raises(StrongParameters::Core::ParameterMissing) do
+    params = DurableParameters::Core::Parameters.new(name: "John")
+    error = assert_raises(DurableParameters::Core::ParameterMissing) do
       params.fetch(:nonexistent)
     end
     assert_equal "nonexistent", error.param
@@ -165,50 +165,50 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test array_of_permitted_scalars? edge cases
   def test_array_of_permitted_scalars_with_empty_array
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     assert params.send(:array_of_permitted_scalars?, [])
   end
 
   def test_array_of_permitted_scalars_with_single_element
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     assert params.send(:array_of_permitted_scalars?, ["string"])
     assert params.send(:array_of_permitted_scalars?, [123])
   end
 
   def test_array_of_permitted_scalars_with_nested_array
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     refute params.send(:array_of_permitted_scalars?, [["nested"]])
   end
 
   # Test slice and except with edge cases
   def test_slice_with_all_keys
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30, email: "john@example.com")
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30, email: "john@example.com")
     sliced = params.slice(*params.keys)
     assert_equal params.to_h, sliced.to_h
   end
 
   def test_except_with_nonexistent_keys
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
     excepted = params.except(:nonexistent, :also_nonexistent)
     assert_equal params.to_h, excepted.to_h
   end
 
   # Test to_h with special values
   def test_to_h_with_infinity
-    params = StrongParameters::Core::Parameters.new(value: Float::INFINITY)
+    params = DurableParameters::Core::Parameters.new(value: Float::INFINITY)
     hash = params.to_h
     assert_equal Float::INFINITY, hash["value"]
   end
 
   def test_to_h_with_nan
-    params = StrongParameters::Core::Parameters.new(value: Float::NAN)
+    params = DurableParameters::Core::Parameters.new(value: Float::NAN)
     hash = params.to_h
     assert hash["value"].nan?
   end
 
   # Test Parameters initialization with special characters in keys
   def test_initialization_with_special_character_keys
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       "key-with-dash" => "value1",
       "key.with.dot" => "value2",
       "key[with][brackets]" => "value3"
@@ -220,9 +220,9 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test permit with controller and action keys (never unpermitted)
   def test_permit_ignores_controller_and_action_in_unpermitted_check
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = :raise
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = :raise
 
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       name: "John",
       controller: "users",
       action: "create"
@@ -232,12 +232,12 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
     permitted = params.permit(:name)
     assert_equal "John", permitted[:name]
   ensure
-    StrongParameters::Core::Parameters.action_on_unpermitted_parameters = nil
+    DurableParameters::Core::Parameters.action_on_unpermitted_parameters = nil
   end
 
   # Test required_key tracking through nested operations
   def test_required_key_persists_through_operations
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       user: {name: "John", email: "john@example.com"}
     )
     user_params = params.require(:user)
@@ -253,27 +253,27 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test unpermitted_keys calculation
   def test_unpermitted_keys_with_empty_params
-    params = StrongParameters::Core::Parameters.new
-    permitted_params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
+    permitted_params = DurableParameters::Core::Parameters.new
     unpermitted = params.send(:unpermitted_keys, permitted_params)
     assert_equal [], unpermitted
   end
 
   def test_unpermitted_keys_with_all_permitted
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
-    permitted_params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
+    permitted_params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
     unpermitted = params.send(:unpermitted_keys, permitted_params)
     assert_equal [], unpermitted
   end
 
   # Test Parameters as subclass of Hash
   def test_parameters_is_hash_subclass
-    params = StrongParameters::Core::Parameters.new(name: "John")
+    params = DurableParameters::Core::Parameters.new(name: "John")
     assert params.is_a?(Hash)
   end
 
   def test_parameters_responds_to_hash_methods
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
     assert_respond_to params, :each
     assert_respond_to params, :map
     assert_respond_to params, :select
@@ -282,7 +282,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test each_pair with blocks
   def test_each_pair_iterates_over_parameters
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
     result = {}
     params.each_pair do |key, value|
       result[key] = value
@@ -292,7 +292,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test permit! with already permitted params
   def test_permit_bang_on_already_permitted
-    params = StrongParameters::Core::Parameters.new(name: "John")
+    params = DurableParameters::Core::Parameters.new(name: "John")
     params.permit!
     assert params.permitted?
 
@@ -303,7 +303,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test values method
   def test_values_returns_all_values
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30, active: true)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30, active: true)
     values = params.values
     assert_equal 3, values.length
     assert_includes values, "John"
@@ -313,7 +313,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test keys method
   def test_keys_returns_all_keys
-    params = StrongParameters::Core::Parameters.new(name: "John", age: 30)
+    params = DurableParameters::Core::Parameters.new(name: "John", age: 30)
     keys = params.keys
     assert_equal 2, keys.length
     assert_includes keys, "name"
@@ -322,18 +322,18 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test empty? and size
   def test_empty_and_size
-    empty_params = StrongParameters::Core::Parameters.new
+    empty_params = DurableParameters::Core::Parameters.new
     assert empty_params.empty?
     assert_equal 0, empty_params.size
 
-    params = StrongParameters::Core::Parameters.new(name: "John")
+    params = DurableParameters::Core::Parameters.new(name: "John")
     refute params.empty?
     assert_equal 1, params.size
   end
 
   # Test dig method (if available in Ruby version)
   def test_dig_with_nested_parameters
-    params = StrongParameters::Core::Parameters.new(
+    params = DurableParameters::Core::Parameters.new(
       user: {
         profile: {
           name: "John"
@@ -350,7 +350,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test transform_params with empty hash result
   def test_transform_params_with_transformation_returning_empty_hash
-    params_class = Class.new(StrongParameters::Core::ApplicationParams) do
+    params_class = Class.new(DurableParameters::Core::ApplicationParams) do
       allow :name
 
       def self.apply_transformations(params, options)
@@ -358,7 +358,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
       end
     end
 
-    params = StrongParameters::Core::Parameters.new(user: {name: "John"})
+    params = DurableParameters::Core::Parameters.new(user: {name: "John"})
     user_params = params.require(:user)
     permitted = user_params.transform_params(params_class)
 
@@ -368,7 +368,7 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
 
   # Test convert_hashes_to_parameters behavior
   def test_convert_hashes_to_parameters_with_nested_structures
-    params = StrongParameters::Core::Parameters.new
+    params = DurableParameters::Core::Parameters.new
     nested = {
       level1: {
         level2: {
@@ -377,8 +377,8 @@ class ParametersEdgeCasesExpandedTest < Minitest::Test
       }
     }
     converted = params.send(:convert_hashes_to_parameters, :test, nested)
-    assert converted[:level1].is_a?(StrongParameters::Core::Parameters)
-    assert converted[:level1][:level2].is_a?(StrongParameters::Core::Parameters)
+    assert converted[:level1].is_a?(DurableParameters::Core::Parameters)
+    assert converted[:level1][:level2].is_a?(DurableParameters::Core::Parameters)
     assert_equal "value", converted[:level1][:level2][:level3]
   end
 end

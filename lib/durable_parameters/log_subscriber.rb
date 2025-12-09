@@ -3,7 +3,7 @@
 require "active_support/log_subscriber"
 require "active_support/notifications"
 
-module StrongParameters
+module DurableParameters
   # Log subscriber for unpermitted parameters notifications.
   #
   # This subscriber listens for unpermitted parameter events and logs them
@@ -32,5 +32,5 @@ end
 
 # Only attach if ActionController is loaded (Rails environment)
 if defined?(ActionController)
-  StrongParameters::LogSubscriber.attach_to :action_controller
+  DurableParameters::LogSubscriber.attach_to :action_controller
 end

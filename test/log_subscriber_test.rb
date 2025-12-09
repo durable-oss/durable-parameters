@@ -4,20 +4,20 @@ require "test_helper"
 
 class LogSubscriberTest < Minitest::Test
   def test_log_subscriber_is_defined
-    assert defined?(StrongParameters::LogSubscriber)
+    assert defined?(DurableParameters::LogSubscriber)
   end
 
   def test_log_subscriber_inherits_from_active_support_log_subscriber
-    assert StrongParameters::LogSubscriber < ActiveSupport::LogSubscriber
+    assert DurableParameters::LogSubscriber < ActiveSupport::LogSubscriber
   end
 
   def test_logger_returns_action_controller_base_logger
-    subscriber = StrongParameters::LogSubscriber.new
+    subscriber = DurableParameters::LogSubscriber.new
     assert_equal ActionController::Base.logger, subscriber.logger
   end
 
   def test_unpermitted_parameters_logs_message
-    subscriber = StrongParameters::LogSubscriber.new
+    subscriber = DurableParameters::LogSubscriber.new
     mock_logger = Minitest::Mock.new
     mock_logger.expect :debug, nil, ["Unpermitted parameters: foo, bar"]
 
@@ -30,7 +30,7 @@ class LogSubscriberTest < Minitest::Test
   end
 
   def test_unpermitted_parameters_with_single_key
-    subscriber = StrongParameters::LogSubscriber.new
+    subscriber = DurableParameters::LogSubscriber.new
     mock_logger = Minitest::Mock.new
     mock_logger.expect :debug, nil, ["Unpermitted parameters: secret"]
 
@@ -43,7 +43,7 @@ class LogSubscriberTest < Minitest::Test
   end
 
   def test_unpermitted_parameters_with_empty_keys
-    subscriber = StrongParameters::LogSubscriber.new
+    subscriber = DurableParameters::LogSubscriber.new
     mock_logger = Minitest::Mock.new
     # With empty keys, it should not log
 
@@ -56,7 +56,7 @@ class LogSubscriberTest < Minitest::Test
   end
 
   def test_unpermitted_parameters_with_nil_keys
-    subscriber = StrongParameters::LogSubscriber.new
+    subscriber = DurableParameters::LogSubscriber.new
     mock_logger = Minitest::Mock.new
     # With nil keys, it should not log
 
@@ -72,7 +72,7 @@ class LogSubscriberTest < Minitest::Test
     # Since ActionController is defined in test_helper, it should have attached
     # We can check if the subscriber is attached
     subscribers = ActiveSupport::LogSubscriber.subscribers
-    attached = subscribers.any? { |s| s.is_a?(StrongParameters::LogSubscriber) }
+    attached = subscribers.any? { |s| s.is_a?(DurableParameters::LogSubscriber) }
     assert attached, "LogSubscriber should be attached to action_controller"
   end
 end

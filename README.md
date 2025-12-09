@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.org/durableprogramming/durable_parameters.svg?branch=master)](https://travis-ci.org/durableprogramming/durable_parameters)
+[![Build Status](https://travis-ci.org/durableprogramming/durable_parameters.svg?branch=master)](https://travis-ci.org/durableprogramming/durable_parameters)
 [![Gem Version](https://badge.fury.io/rb/durable_parameters.svg)](http://badge.fury.io/rb/durable_parameters)
 
 # Durable Parameters
@@ -71,10 +71,10 @@ end
 
 ``` ruby
 require 'sinatra/base'
-require 'strong_parameters/adapters/sinatra'
+require 'durable_parameters/adapters/sinatra'
 
 class MyApp < Sinatra::Base
-  register StrongParameters::Adapters::Sinatra
+  register DurableParameters::Adapters::Sinatra
 
   post '/users' do
     user_params = strong_params.require(:user).permit(:name, :email)
@@ -87,13 +87,13 @@ end
 ### Hanami (2.x)
 
 ``` ruby
-require 'strong_parameters/adapters/hanami'
+require 'durable_parameters/adapters/hanami'
 
 module MyApp
   module Actions
     module Users
       class Create < MyApp::Action
-        include StrongParameters::Adapters::Hanami::Action
+        include DurableParameters::Adapters::Hanami::Action
 
         def handle(request, response)
           user_params = strong_params(request.params).require(:user).permit(:name, :email)
@@ -108,14 +108,14 @@ end
 ### Hanami (1.x)
 
 ``` ruby
-require 'strong_parameters/adapters/hanami'
+require 'durable_parameters/adapters/hanami'
 
 module Web
   module Controllers
     module Users
       class Create
         include Web::Action
-        include StrongParameters::Adapters::Hanami::Action
+        include DurableParameters::Adapters::Hanami::Action
 
         def call(params)
           user_params = strong_params.require(:user).permit(:name, :email)
@@ -130,7 +130,7 @@ end
 ### Rage
 
 ``` ruby
-require 'strong_parameters/adapters/rage'
+require 'durable_parameters/adapters/rage'
 
 class UsersController < RageController::API
   def create
@@ -144,11 +144,11 @@ end
 ### Standalone (No Framework)
 
 ``` ruby
-require 'strong_parameters/core'
+require 'durable_parameters/core'
 
 # Use the core Parameters class directly
 raw_params = { user: { name: 'John', email: 'john@example.com', admin: true } }
-params = StrongParameters::Core::Parameters.new(raw_params)
+params = DurableParameters::Core::Parameters.new(raw_params)
 
 # Require and permit parameters
 user_params = params.require(:user).permit(:name, :email)
@@ -216,14 +216,21 @@ While Strong Parameters will enforce permitted and required values in your appli
 that you will need to sanitize untrusted data used for mass assignment when in use outside of controllers.
 
 For example, if you retrieve JSON data from a third party API call and pass the unchecked parsed result on to
-`Model.create`, undesired mass assignments could take place.  You can alleviate this risk by slicing the hash data,
-or wrapping the data in a new instance of `ActionController::Parameters` and declaring permissions the same as
-you would in a controller.  For example:
+`Model.create`, undesired mass assignments could take place. You can alleviate this risk by slicing the hash data,
+or wrapping the data in a Parameters object and declaring permissions. For example:
 
+**In Rails:**
 ``` ruby
 raw_parameters = { :email => "john@example.com", :name => "John", :admin => true }
 parameters = ActionController::Parameters.new(raw_parameters)
 user = User.create(parameters.permit(:name, :email))
+```
+
+**Outside of Rails (standalone):**
+``` ruby
+raw_parameters = { :email => "john@example.com", :name => "John", :admin => true }
+parameters = DurableParameters::Core::Parameters.new(raw_parameters)
+user = User.create(parameters.permit(:name, :email).to_h)
 ```
 
 ## Declarative Parameter Permissions with `app/params/`
@@ -402,7 +409,7 @@ end
 
 **Important:** If you try to pass metadata that hasn't been declared, `transform_params` will raise an `ArgumentError` with a helpful message telling you which metadata key to declare.
 
-**Note:** Metadata is validated and can be used by transformations for dynamic parameter processing.
+**Note:** The `:current_user` key is always implicitly allowed and doesn't need to be declared. Metadata is validated and can be used by transformations for dynamic parameter processing.
 
 ### Parameter Transformations
 
@@ -414,7 +421,9 @@ class UserParams < ApplicationParams
   allow :role
   allow :username
 
-  metadata :current_user  # Declare metadata that transformations can access
+  # Note: :current_user doesn't need to be declared - it's always allowed
+  # Declare any other metadata keys your transformations need
+  # metadata :some_other_key
 
   # Normalize email to lowercase
   transform :email do |value, metadata|
@@ -454,7 +463,7 @@ end
 1. Transformations are applied first, modifying parameter values
 2. Then filtering occurs based on allowed/denied attributes
 3. Action-specific permissions are respected
-4. Metadata must be declared (except `current_user` which is always allowed)
+4. Metadata keys must be declared using `metadata` (except `:current_user` which is always implicitly allowed)
 
 ### Action-Specific Permissions
 
@@ -543,8 +552,27 @@ params.require(:user).transform_params(additional_attrs: [:temporary_token])
 
 Params classes support inheritance, allowing you to build on existing definitions:
 
+**In Rails:**
 ``` ruby
+# app/params/application_params.rb
+# Note: ActionController::ApplicationParams is an alias for DurableParameters::Core::ApplicationParams
 class ApplicationParams < ActionController::ApplicationParams
+  # Common attributes for all models
+  allow :created_at
+  allow :updated_at
+end
+
+# app/params/user_params.rb
+class UserParams < ApplicationParams
+  # Inherits :created_at and :updated_at
+  allow :name
+  allow :email
+end
+```
+
+**Standalone (without Rails):**
+``` ruby
+class ApplicationParams < DurableParameters::Core::ApplicationParams
   # Common attributes for all models
   allow :created_at
   allow :updated_at
@@ -556,6 +584,8 @@ class UserParams < ApplicationParams
   allow :email
 end
 ```
+
+**Note:** In Rails environments, `ActionController::ApplicationParams` is automatically aliased to `DurableParameters::Core::ApplicationParams` for convenience. Both refer to the same class. Use whichever feels more natural in your Rails application.
 
 ### Checking Permissions
 
@@ -571,17 +601,29 @@ UserParams.permitted_attributes  # => [:name, :email, :created_at, :updated_at]
 
 All params classes are automatically registered and can be looked up:
 
+**In Rails:**
 ``` ruby
+# ActionController::ParamsRegistry is an alias for DurableParameters::Core::ParamsRegistry
 ActionController::ParamsRegistry.lookup(:user)  # => UserParams
 ActionController::ParamsRegistry.registered?(:user)  # => true
 ActionController::ParamsRegistry.permitted_attributes_for(:user)  # => [:name, :email, ...]
 ```
 
+**Standalone:**
+``` ruby
+# Use the core registry directly
+DurableParameters::Core::ParamsRegistry.lookup(:user)  # => UserParams
+DurableParameters::Core::ParamsRegistry.registered?(:user)  # => true
+DurableParameters::Core::ParamsRegistry.permitted_attributes_for(:user)  # => [:name, :email, ...]
+```
+
+**Note:** In Rails environments, `ActionController::ParamsRegistry` is automatically aliased to `DurableParameters::Core::ParamsRegistry`. Both access the same unified registry.
+
 ## Architecture
 
 This gem is built with a modular architecture that separates core functionality from framework-specific integrations:
 
-### Core Module (`StrongParameters::Core`)
+### Core Module (`DurableParameters::Core`)
 
 The core module provides framework-agnostic classes:
 - **`Parameters`** - Hash-based parameter filtering and whitelisting
@@ -595,23 +637,23 @@ The core has zero dependencies and can be used standalone.
 
 Each adapter extends the core with framework-specific features:
 
-- **Rails Adapter** (`StrongParameters::Adapters::Rails`)
+- **Rails Adapter** (`DurableParameters::Adapters::Rails`)
   - Integrates with ActionController and ActiveModel
   - Provides HashWithIndifferentAccess behavior
   - Supports uploaded files (ActionDispatch, Rack)
   - Auto-loads params classes from `app/params/`
 
-- **Sinatra Adapter** (`StrongParameters::Adapters::Sinatra`)
+- **Sinatra Adapter** (`DurableParameters::Adapters::Sinatra`)
   - Provides `strong_params` helper method
   - Automatic error handling (400 Bad Request)
   - Logging support in development mode
 
-- **Hanami Adapter** (`StrongParameters::Adapters::Hanami`)
+- **Hanami Adapter** (`DurableParameters::Adapters::Hanami`)
   - Supports both Hanami 1.x and 2.x
   - Provides `strong_params` helper for actions
   - Integrates with Hanami's error handling
 
-- **Rage Adapter** (`StrongParameters::Adapters::Rage`)
+- **Rage Adapter** (`DurableParameters::Adapters::Rage`)
   - Rails-compatible API for Rage framework
   - Automatic controller integration
   - Error handling via `rescue_from`
@@ -660,7 +702,7 @@ Automatic setup when you register the adapter:
 
 ``` ruby
 class MyApp < Sinatra::Base
-  register StrongParameters::Adapters::Sinatra
+  register DurableParameters::Adapters::Sinatra
 end
 ```
 
@@ -668,7 +710,7 @@ Or include in Sinatra classic style:
 
 ``` ruby
 require 'sinatra'
-require 'strong_parameters/adapters/sinatra'
+require 'durable_parameters/adapters/sinatra'
 ```
 
 ### Hanami Setup
@@ -677,10 +719,10 @@ Setup is automatic when you include the Action module:
 
 ``` ruby
 # Hanami 2.x - include in your actions
-include StrongParameters::Adapters::Hanami::Action
+include DurableParameters::Adapters::Hanami::Action
 
 # Or setup globally in config/app.rb
-StrongParameters::Adapters::Hanami.setup!(Hanami.app)
+DurableParameters::Adapters::Hanami.setup!(Hanami.app)
 ```
 
 ### Rage Setup
@@ -688,7 +730,7 @@ StrongParameters::Adapters::Hanami.setup!(Hanami.app)
 Setup happens automatically when the adapter is loaded:
 
 ``` ruby
-require 'strong_parameters/adapters/rage'
+require 'durable_parameters/adapters/rage'
 # Controllers will automatically have strong parameters support
 ```
 
@@ -697,19 +739,19 @@ require 'strong_parameters/adapters/rage'
 No setup required - just use the core classes:
 
 ``` ruby
-require 'strong_parameters/core'
+require 'durable_parameters/core'
 
 # Define params classes
-class UserParams < StrongParameters::Core::ApplicationParams
+class UserParams < DurableParameters::Core::ApplicationParams
   allow :name
   allow :email
 end
 
 # Register params classes
-StrongParameters::Core::ParamsRegistry.register(:user, UserParams)
+DurableParameters::Core::ParamsRegistry.register(:user, UserParams)
 
 # Use parameters
-params = StrongParameters::Core::Parameters.new(raw_hash)
+params = DurableParameters::Core::Parameters.new(raw_hash)
 ```
 
 ## Migration Path to Rails 4
