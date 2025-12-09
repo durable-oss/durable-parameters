@@ -4,7 +4,7 @@ PATH
     durable_parameters (0.2.3)
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     actionpack (8.1.1)
       actionview (= 8.1.1)
