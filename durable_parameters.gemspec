@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.email = ["djberube@durableprogramming.com"]
   s.summary = "Framework-agnostic durable parameters with adapters for Rails, Sinatra, Hanami, and Rage"
   s.description = "Durable Parameters provides a whitelist-based approach to mass assignment protection. This gem is framework-agnostic with adapters for Rails, Sinatra, Hanami, and Rage."
-  s.homepage = "https://github.com/durableprogramming/durable_parameters"
+  s.homepage = "https://github.com/durable-oss/durable-parameters"
   s.license = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.md"]

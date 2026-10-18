@@ -8,7 +8,7 @@ Thank you for your interest in contributing to Durable Parameters! This document
 
 1. **Fork and Clone**
    ```bash
-   git fork https://github.com/durableprogramming/durable_parameters
+   git fork https://github.com/durable-oss/durable-parameters
    cd durable_parameters
    ```
 

@@ -61,5 +61,5 @@ Previous versions were Rails-specific. See git history for details.
 
 ---
 
-[Unreleased]: https://github.com/durableprogramming/durable_parameters/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/durableprogramming/durable_parameters/releases/tag/v1.0.0
+[Unreleased]: https://github.com/durable-oss/durable-parameters/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/durable-oss/durable-parameters/releases/tag/v1.0.0

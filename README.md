@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/durableprogramming/durable_parameters.svg?branch=master)](https://travis-ci.org/durableprogramming/durable_parameters)
 [![Gem Version](https://badge.fury.io/rb/durable_parameters.svg)](http://badge.fury.io/rb/durable_parameters)
 
 # Durable Parameters
